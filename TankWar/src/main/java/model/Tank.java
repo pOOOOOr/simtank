@@ -9,33 +9,68 @@ import java.awt.event.KeyEvent;
 import java.util.Random;
 
 public class Tank {
-    public static final int XSPEED = 5;
-    public static final int YSPEED = 5;
-    public static final int WIDTH = 30;
-    public static final int HEIGHT = 30;
+    private static int WIDTH = 30;
+    private static int HEIGHT = 30;
+    private static int YSPEED = 5;
+    private static int XSPEED = 5;
     private static Random r = new Random();
     private static Color[] colors = {Color.RED, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE};
-    public int id;
-    public int x;
-    public int y;
-    public Dir dir = Dir.STOP;
-    public Dir ptDir = Dir.D;
-    TankClient tc;
-    boolean bL, bU, bR, bD;
+    private int id;
+    private int posX;
+    private int posY;
+    private Direction direction = Direction.STOP;
+    private Direction canonDirection = Direction.D;
+    private boolean left, up, right, down;
+    private TankClient tankClient;
     private boolean live = true;
     private Color color;
 
-
-    public Tank(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public Tank(int posX, int posY, Direction direction, TankClient tankClient) {
+        this.posX = posX;
+        this.posY = posY;
+        this.direction = direction;
+        this.tankClient = tankClient;
+        this.color = colors[r.nextInt(colors.length)];
     }
 
-    public Tank(int x, int y, Dir dir, TankClient tc) {
-        this(x, y);
-        this.dir = dir;
-        this.tc = tc;
-        this.color = colors[r.nextInt(colors.length)];
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPosX() {
+        return posX;
+    }
+
+    public void setPosX(int posX) {
+        this.posX = posX;
+    }
+
+    public int getPosY() {
+        return posY;
+    }
+
+    public void setPosY(int posY) {
+        this.posY = posY;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public void setCanonDirection(Direction canonDirection) {
+        this.canonDirection = canonDirection;
     }
 
     public void draw(Graphics g) {
@@ -43,36 +78,34 @@ public class Tank {
 
         Color c = g.getColor();
         g.setColor(this.color);
-        g.fillOval(x, y, WIDTH, HEIGHT);
-        g.drawString("id:" + id, x, y - 10);
+        g.fillRect(posX, posY, WIDTH, HEIGHT);
+        g.drawString("id:" + id, posX, posY - 10);
         g.setColor(c);
 
-        switch (ptDir) {
+        switch (canonDirection) {
             case L:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x, y + HEIGHT / 2);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX, posY + HEIGHT / 2);
                 break;
             case LU:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x, y);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX, posY);
                 break;
             case U:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH / 2, y);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX + WIDTH / 2, posY);
                 break;
             case RU:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH, y);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX + WIDTH, posY);
                 break;
             case R:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH, y
-                        + HEIGHT / 2);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX + WIDTH, posY + HEIGHT / 2);
                 break;
             case RD:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH, y + HEIGHT);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX + WIDTH, posY + HEIGHT);
                 break;
             case D:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x + WIDTH / 2, y
-                        + HEIGHT);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX + WIDTH / 2, posY + HEIGHT);
                 break;
             case LD:
-                g.drawLine(x + WIDTH / 2, y + HEIGHT / 2, x, y + HEIGHT);
+                g.drawLine(posX + WIDTH / 2, posY + HEIGHT / 2, posX, posY + HEIGHT);
                 break;
         }
 
@@ -80,140 +113,128 @@ public class Tank {
     }
 
     private void move() {
-        switch (dir) {
+        switch (direction) {
             case L:
-                x -= XSPEED;
+                posX -= XSPEED;
                 break;
             case LU:
-                x -= XSPEED;
-                y -= YSPEED;
+                posX -= XSPEED;
+                posY -= YSPEED;
                 break;
             case U:
-                y -= YSPEED;
+                posY -= YSPEED;
                 break;
             case RU:
-                x += XSPEED;
-                y -= YSPEED;
+                posX += XSPEED;
+                posY -= YSPEED;
                 break;
             case R:
-                x += XSPEED;
+                posX += XSPEED;
                 break;
             case RD:
-                x += XSPEED;
-                y += YSPEED;
+                posX += XSPEED;
+                posY += YSPEED;
                 break;
             case D:
-                y += YSPEED;
+                posY += YSPEED;
                 break;
             case LD:
-                x -= XSPEED;
-                y += YSPEED;
+                posX -= XSPEED;
+                posY += YSPEED;
                 break;
             case STOP:
                 break;
         }
 
-        if (dir != Dir.STOP) {
-            ptDir = dir;
-        }
+        if (direction != Direction.STOP) canonDirection = direction;
 
-        if (x < 0)
-            x = 0;
-        if (y < 30)
-            y = 30;
-        if (x + WIDTH > TankClient.GAME_WIDTH)
-            x = TankClient.GAME_WIDTH - WIDTH;
-        if (y + HEIGHT > TankClient.GAME_HEIGHT)
-            y = TankClient.GAME_HEIGHT - HEIGHT;
+        if (posX < 0) posX = 0;
+        if (posY < 30) posY = 30;
+        if (posX + WIDTH > TankClient.GAME_WIDTH) posX = TankClient.GAME_WIDTH - WIDTH;
+        if (posY + HEIGHT > TankClient.GAME_HEIGHT) posY = TankClient.GAME_HEIGHT - HEIGHT;
     }
 
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        switch (key) {
+        switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT:
-                bL = true;
+                left = true;
                 break;
             case KeyEvent.VK_UP:
-                bU = true;
+                up = true;
                 break;
             case KeyEvent.VK_RIGHT:
-                bR = true;
+                right = true;
                 break;
             case KeyEvent.VK_DOWN:
-                bD = true;
+                down = true;
                 break;
         }
         locateDirection();
     }
 
     private void locateDirection() {
-        Dir oldDir = this.dir;
+        Direction oldDirection = this.direction;
 
-        if (bL && !bU && !bR && !bD)
-            dir = Dir.L;
-        else if (bL && bU && !bR && !bD)
-            dir = Dir.LU;
-        else if (!bL && bU && !bR && !bD)
-            dir = Dir.U;
-        else if (!bL && bU && bR && !bD)
-            dir = Dir.RU;
-        else if (!bL && !bU && bR && !bD)
-            dir = Dir.R;
-        else if (!bL && !bU && bR && bD)
-            dir = Dir.RD;
-        else if (!bL && !bU && !bR && bD)
-            dir = Dir.D;
-        else if (bL && !bU && !bR && bD)
-            dir = Dir.LD;
-        else if (!bL && !bU && !bR && !bD)
-            dir = Dir.STOP;
+        if (left && !up && !right && !down)
+            direction = Direction.L;
+        else if (left && up && !right && !down)
+            direction = Direction.LU;
+        else if (!left && up && !right && !down)
+            direction = Direction.U;
+        else if (!left && up && right && !down)
+            direction = Direction.RU;
+        else if (!left && !up && right && !down)
+            direction = Direction.R;
+        else if (!left && !up && right && down)
+            direction = Direction.RD;
+        else if (!left && !up && !right && down)
+            direction = Direction.D;
+        else if (left && !up && !right && down)
+            direction = Direction.LD;
+        else if (!left && !up && !right && !down)
+            direction = Direction.STOP;
 
-        if (dir != oldDir) {
-            TankMoveMsg msg = new TankMoveMsg(id, x, y, dir, ptDir);
-            tc.netClient.send(msg);
+        if (direction != oldDirection) {
+            TankMoveMsg msg = new TankMoveMsg(id, posX, posY, direction, canonDirection);
+            tankClient.netClient.send(msg);
         }
     }
 
     public void keyReleased(KeyEvent e) {
-        int key = e.getKeyCode();
-        switch (key) {
+        switch (e.getKeyCode()) {
             case KeyEvent.VK_CONTROL:
                 fire();
                 break;
             case KeyEvent.VK_LEFT:
-                bL = false;
+                left = false;
                 break;
             case KeyEvent.VK_UP:
-                bU = false;
+                up = false;
                 break;
             case KeyEvent.VK_RIGHT:
-                bR = false;
+                right = false;
                 break;
             case KeyEvent.VK_DOWN:
-                bD = false;
+                down = false;
                 break;
         }
         locateDirection();
     }
 
-    private Missile fire() {
-        if (!live)
-            return null;
+    private void fire() {
+        if (!live) return;
 
-        int x = this.x + WIDTH / 2 - Missile.WIDTH / 2;
-        int y = this.y + HEIGHT / 2 - Missile.HEIGHT / 2;
-        Missile m = new Missile(id, x, y, this.ptDir, this.tc);
-        tc.missiles.add(m);
+        int x = this.posX + WIDTH / 2 - Missile.WIDTH / 2;
+        int y = this.posY + HEIGHT / 2 - Missile.HEIGHT / 2;
+        Missile m = new Missile(this.id, x, y, this.canonDirection, this.tankClient);
+        tankClient.missiles.add(m);
 
         MissileNewMsg msg = new MissileNewMsg(m);
-        tc.netClient.send(msg);
-
-        return m;
+        tankClient.netClient.send(msg);
     }
 
-
     public Rectangle getRect() {
-        return new Rectangle(x, y, WIDTH, HEIGHT);
+        return new Rectangle(posX, posY, WIDTH, HEIGHT);
     }
 
     public boolean isLive() {

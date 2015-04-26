@@ -1,7 +1,7 @@
 package main.java.comm;
 
 import main.java.TankClient;
-import main.java.model.Dir;
+import main.java.model.Direction;
 import main.java.model.Missile;
 
 import java.io.ByteArrayOutputStream;
@@ -33,11 +33,11 @@ public class MissileNewMsg implements Msg {
         DataOutputStream dos = new DataOutputStream(baos);
         try {
             dos.writeInt(msgType);
-            dos.writeInt(m.tankId);
-            dos.writeInt(m.id);
-            dos.writeInt(m.x);
-            dos.writeInt(m.y);
-            dos.writeInt(m.dir.ordinal());
+            dos.writeInt(m.getTankID());
+            dos.writeInt(m.getId());
+            dos.writeInt(m.getX());
+            dos.writeInt(m.getY());
+            dos.writeInt(m.getDirection().ordinal());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,16 +56,16 @@ public class MissileNewMsg implements Msg {
     public void parse(DataInputStream dis) {
         try {
             int tankId = dis.readInt();
-            if (tankId == tc.tank.id) {
+            if (tankId == tc.tank.getId()) {
                 return;
             }
             int id = dis.readInt();
             int x = dis.readInt();
             int y = dis.readInt();
-            Dir dir = Dir.values()[dis.readInt()];
+            Direction direction = Direction.values()[dis.readInt()];
 
-            Missile m = new Missile(tankId, x, y, dir, tc);
-            m.id = id;
+            Missile m = new Missile(tankId, x, y, direction, tc);
+            m.setId(id);
             tc.missiles.add(m);
         } catch (IOException e) {
             e.printStackTrace();

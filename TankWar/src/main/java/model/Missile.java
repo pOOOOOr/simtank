@@ -3,43 +3,67 @@ package main.java.model;
 import main.java.TankClient;
 
 import java.awt.*;
-import java.util.List;
 
 public class Missile {
-    public static final int XSPEED = 10;
-    public static final int YSPEED = 10;
-    public static final int WIDTH = 10;
-    public static final int HEIGHT = 10;
-    private static int ID = 1;
-    public int tankId;
-    public int id;
-    public int x;
-    public int y;
-    public Dir dir = Dir.R;
-    public boolean live = true;
-    TankClient tc;
+    public static int WIDTH = 10;
+    public static int HEIGHT = 10;
+    private int YSPEED = 10;
+    private int XSPEED = 10;
+    private int INIT_ID = 1;
+    private int tankID;
+    private int id;
+    private int x;
+    private int y;
+    private Direction direction = Direction.R;
+    private TankClient tankClient;
+    private boolean live = true;
+    private Rectangle rectangle;
 
-    public Missile(int tankId, int x, int y, Dir dir) {
-        this.tankId = tankId;
+    public Missile(int tankID, int x, int y, Direction direction, TankClient tankClient) {
+        this.tankID = tankID;
         this.x = x;
         this.y = y;
-        this.dir = dir;
-        this.id = ID++;
+        this.direction = direction;
+        this.id = INIT_ID++;
+        this.tankClient = tankClient;
+        this.rectangle = new Rectangle(x, y, WIDTH, HEIGHT);
     }
 
-    public Missile(int tankId, int x, int y, Dir dir, TankClient tc) {
-        this(tankId, x, y, dir);
-        this.tc = tc;
+    public boolean isLive() {
+        return live;
+    }
+
+    public void setLive(boolean live) {
+        this.live = live;
+    }
+
+    public int getTankID() {
+        return tankID;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public Direction getDirection() {
+        return direction;
     }
 
     public void draw(Graphics g) {
-        if (!live) {
-            tc.missiles.remove(this);
-            return;
-        }
-
         Color c = g.getColor();
-        g.setColor(Color.BLACK);
+        g.setColor(tankClient.tank.getColor());
         g.fillOval(x, y, WIDTH, HEIGHT);
         g.setColor(c);
 
@@ -47,7 +71,7 @@ public class Missile {
     }
 
     private void move() {
-        switch (dir) {
+        switch (direction) {
             case L:
                 x -= XSPEED;
                 break;
@@ -80,33 +104,21 @@ public class Missile {
                 break;
         }
 
-        if (x < 0 || y < 0 || x > TankClient.GAME_WIDTH
-                || y > TankClient.GAME_HEIGHT) {
-            live = false;
+        this.rectangle.setLocation(x, y);
+
+        if (x < 0 || y < 0 || x > TankClient.GAME_WIDTH || y > TankClient.GAME_HEIGHT) {
+            this.live = false;
         }
     }
 
-    public Rectangle getRect() {
-        return new Rectangle(x, y, WIDTH, HEIGHT);
-    }
-
-
-    public boolean hitTank(Tank t) {
-        if (this.live && this.tankId != t.id && t.isLive() && this.getRect().intersects(t.getRect())) {
+    public boolean hit(Tank tank) {
+        if (this.live && this.tankID != tank.getId() && tank.isLive() && this.rectangle.intersects(tank.getRect())) {
             this.live = false;
-            t.setLive(false);
-            tc.explodes.add(new Explode(x, y, tc));
+            tank.setLive(false);
+            tankClient.explodes.add(new Explode(x, y));
             return true;
         }
-        return false;
-    }
 
-    public boolean hitTanks(List<Tank> tanks) {
-        for (int i = 0; i < tanks.size(); i++) {
-            if (this.hitTank(tanks.get(i))) {
-                return true;
-            }
-        }
         return false;
     }
 }

@@ -28,15 +28,15 @@ public class TankDeadMsg implements Msg {
     public void parse(DataInputStream dis) {
         try {
             int id = dis.readInt();
-            if (tc.tank.id == id) {
+            if (tc.tank.getId() == id) {
                 return;
             }
 
-            // System.out.println("id:" + id + "-x:" + x + "-y:" + y + "-dir:" +
-            // dir + "-good:" + good);
+            // System.out.println("id:" + id + "-posX:" + posX + "-posY:" + posY + "-direction:" +
+            // direction + "-good:" + good);
             for (int i = 0; i < tc.tanks.size(); i++) {
                 Tank t = tc.tanks.get(i);
-                if (t.id == id) {
+                if (t.getId() == id) {
                     t.setLive(false);
                     break;
                 }

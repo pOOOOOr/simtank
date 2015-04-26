@@ -2,7 +2,7 @@ package main.java;
 
 import main.java.comm.MissileDeadMsg;
 import main.java.comm.TankDeadMsg;
-import main.java.model.Dir;
+import main.java.model.Direction;
 import main.java.model.Explode;
 import main.java.model.Missile;
 import main.java.model.Tank;
@@ -19,7 +19,7 @@ public class TankClient extends Frame {
     public static final int GAME_WIDTH = 800;
     public static final int GAME_HEIGHT = 600;
 
-    public Tank tank = new Tank(100, 50, Dir.STOP, this);
+    public Tank tank = new Tank(100, 50, Direction.STOP, this);
     public List<Missile> missiles = new ArrayList<>();
     public List<Explode> explodes = new ArrayList<>();
     public List<Tank> tanks = new ArrayList<>();
@@ -39,17 +39,16 @@ public class TankClient extends Frame {
         g.drawString("tanks: " + tanks.size(), 10, 40);
 
         for (Missile m : missiles) {
-            if (m.hitTank(tank)) {
-                TankDeadMsg tankDeadMsg = new TankDeadMsg(tank.id);
+            if (m.hit(tank)) {
+                TankDeadMsg tankDeadMsg = new TankDeadMsg(tank.getId());
                 netClient.send(tankDeadMsg);
-                MissileDeadMsg missileDeadMsg = new MissileDeadMsg(m.tankId, m.id);
+                MissileDeadMsg missileDeadMsg = new MissileDeadMsg(m.getTankID(), m.getId());
                 netClient.send(missileDeadMsg);
             }
-            m.draw(g);
+            if (m.isLive()) m.draw(g);
         }
 
-        for (Explode explode : explodes)
-            explode.draw(g);
+        explodes.stream().filter(explode -> !explode.isDone()).forEach(explode -> explode.draw(g));
 
         for (Tank t : tanks)
             t.draw(g);

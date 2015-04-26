@@ -33,13 +33,13 @@ public class MissileDeadMsg implements Msg {
             int tankId = dis.readInt();
             int id = dis.readInt();
 
-            // System.out.println("id:" + id + "-x:" + x + "-y:" + y + "-dir:" +
-            // dir + "-good:" + good);
+            // System.out.println("id:" + id + "-posX:" + posX + "-posY:" + posY + "-direction:" +
+            // direction + "-good:" + good);
             for (int i = 0; i < tc.missiles.size(); i++) {
                 Missile m = tc.missiles.get(i);
-                if (m.tankId == tankId && m.id == id) {
-                    m.live = false;
-                    tc.explodes.add(new Explode(m.x, m.y, tc));
+                if (m.getTankID() == tankId && m.getId() == id) {
+                    m.setLive(false);
+                    tc.explodes.add(new Explode(m.getX(), m.getY()));
                     break;
                 }
             }

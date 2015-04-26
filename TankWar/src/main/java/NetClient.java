@@ -46,7 +46,7 @@ public class NetClient {
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
 
-            tankClient.tank.id = id;
+            tankClient.tank.setId(id);
 
             System.out.println("Connected! ID: " + id);
         } catch (UnknownHostException e) {

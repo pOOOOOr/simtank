@@ -1,7 +1,7 @@
 package main.java.comm;
 
 import main.java.TankClient;
-import main.java.model.Dir;
+import main.java.model.Direction;
 import main.java.model.Tank;
 
 import java.io.ByteArrayOutputStream;
@@ -17,16 +17,16 @@ public class TankMoveMsg implements Msg {
     int msgType = TANK_MOVE_MSG;
     int x, y;
     int id;
-    Dir ptDir;
-    Dir dir;
+    Direction ptDirection;
+    Direction direction;
     TankClient tc;
 
-    public TankMoveMsg(int id, int x, int y, Dir dir, Dir ptDir) {
+    public TankMoveMsg(int id, int x, int y, Direction direction, Direction ptDirection) {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.dir = dir;
-        this.ptDir = ptDir;
+        this.direction = direction;
+        this.ptDirection = ptDirection;
     }
 
     public TankMoveMsg(TankClient tc) {
@@ -36,23 +36,23 @@ public class TankMoveMsg implements Msg {
     public void parse(DataInputStream dis) {
         try {
             int id = dis.readInt();
-            if (tc.tank.id == id) {
+            if (tc.tank.getId() == id) {
                 return;
             }
             int x = dis.readInt();
             int y = dis.readInt();
-            Dir dir = Dir.values()[dis.readInt()];
-            Dir ptDir = Dir.values()[dis.readInt()];
-            // System.out.println("id:" + id + "-x:" + x + "-y:" + y + "-dir:" +
-            // dir + "-good:" + good);
+            Direction direction = Direction.values()[dis.readInt()];
+            Direction ptDirection = Direction.values()[dis.readInt()];
+            // System.out.println("id:" + id + "-posX:" + posX + "-posY:" + posY + "-direction:" +
+            // direction + "-good:" + good);
             boolean exist = false;
             for (int i = 0; i < tc.tanks.size(); i++) {
                 Tank t = tc.tanks.get(i);
-                if (t.id == id) {
-                    t.x = x;
-                    t.y = y;
-                    t.dir = dir;
-                    t.ptDir = ptDir;
+                if (t.getId() == id) {
+                    t.setPosX(x);
+                    t.setPosY(y);
+                    t.setDirection(direction);
+                    t.setCanonDirection(ptDirection);
                     exist = true;
                     break;
                 }
@@ -72,8 +72,8 @@ public class TankMoveMsg implements Msg {
             dos.writeInt(id);
             dos.writeInt(x);
             dos.writeInt(y);
-            dos.writeInt(dir.ordinal());
-            dos.writeInt(ptDir.ordinal());
+            dos.writeInt(direction.ordinal());
+            dos.writeInt(ptDirection.ordinal());
         } catch (IOException e) {
             e.printStackTrace();
         }

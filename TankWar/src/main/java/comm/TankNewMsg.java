@@ -1,7 +1,7 @@
 package main.java.comm;
 
 import main.java.TankClient;
-import main.java.model.Dir;
+import main.java.model.Direction;
 import main.java.model.Tank;
 
 import java.io.ByteArrayOutputStream;
@@ -31,10 +31,10 @@ public class TankNewMsg implements Msg {
         DataOutputStream dos = new DataOutputStream(baos);
         try {
             dos.writeInt(msgType);
-            dos.writeInt(tank.id);
-            dos.writeInt(tank.x);
-            dos.writeInt(tank.y);
-            dos.writeInt(tank.dir.ordinal());
+            dos.writeInt(tank.getId());
+            dos.writeInt(tank.getPosX());
+            dos.writeInt(tank.getPosY());
+            dos.writeInt(tank.getDirection().ordinal());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,18 +54,18 @@ public class TankNewMsg implements Msg {
     public void parse(DataInputStream dis) {
         try {
             int id = dis.readInt();
-            if (tc.tank.id == id) {
+            if (tc.tank.getId() == id) {
                 return;
             }
 
             int x = dis.readInt();
             int y = dis.readInt();
-            Dir dir = Dir.values()[dis.readInt()];
+            Direction direction = Direction.values()[dis.readInt()];
 
             boolean exist = false;
             for (int i = 0; i < tc.tanks.size(); i++) {
                 Tank t = tc.tanks.get(i);
-                if (t.id == id) {
+                if (t.getId() == id) {
                     exist = true;
                     break;
                 }
@@ -75,8 +75,8 @@ public class TankNewMsg implements Msg {
                 TankNewMsg tnMsg = new TankNewMsg(tc.tank);
                 tc.netClient.send(tnMsg);
 
-                Tank t = new Tank(x, y, dir, tc);
-                t.id = id;
+                Tank t = new Tank(x, y, direction, tc);
+                t.setId(id);
                 tc.tanks.add(t);
             }
 
