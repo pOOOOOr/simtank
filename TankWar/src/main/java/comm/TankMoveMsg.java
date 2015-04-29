@@ -14,80 +14,66 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 public class TankMoveMsg implements Msg {
-    int msgType = TANK_MOVE_MSG;
-    int x, y;
-    int id;
-    Direction ptDirection;
-    Direction direction;
-    TankClient tc;
+    private int id;
+    private int x;
+    private int y;
+    private Direction canonDirection;
+    private Direction direction;
+    private TankClient tankClient;
 
-    public TankMoveMsg(int id, int x, int y, Direction direction, Direction ptDirection) {
+    public TankMoveMsg(int id, int x, int y, Direction direction, Direction canonDirection) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.direction = direction;
-        this.ptDirection = ptDirection;
+        this.canonDirection = canonDirection;
     }
 
-    public TankMoveMsg(TankClient tc) {
-        this.tc = tc;
+    public TankMoveMsg(TankClient tankClient) {
+        this.tankClient = tankClient;
     }
 
-    public void parse(DataInputStream dis) {
+    public void send(DatagramSocket datagramSocket, String IP, int udpPort) {
+        ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
-            int id = dis.readInt();
-            if (tc.tank.getId() == id) {
-                return;
-            }
-            int x = dis.readInt();
-            int y = dis.readInt();
-            Direction direction = Direction.values()[dis.readInt()];
-            Direction ptDirection = Direction.values()[dis.readInt()];
-            // System.out.println("id:" + id + "-posX:" + posX + "-posY:" + posY + "-direction:" +
-            // direction + "-good:" + good);
-            boolean exist = false;
-            for (int i = 0; i < tc.tanks.size(); i++) {
-                Tank t = tc.tanks.get(i);
-                if (t.getId() == id) {
-                    t.setPosX(x);
-                    t.setPosY(y);
-                    t.setDirection(direction);
-                    t.setCanonDirection(ptDirection);
-                    exist = true;
-                    break;
-                }
-            }
+            outputStream.writeInt(TANK_MOVE);
+            outputStream.writeInt(id);
+            outputStream.writeInt(x);
+            outputStream.writeInt(y);
+            outputStream.writeInt(direction.ordinal());
+            outputStream.writeInt(canonDirection.ordinal());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void send(DatagramSocket ds, String IP, int udpPort) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeInt(msgType);
-            dos.writeInt(id);
-            dos.writeInt(x);
-            dos.writeInt(y);
-            dos.writeInt(direction.ordinal());
-            dos.writeInt(ptDirection.ordinal());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        byte[] buf = baos.toByteArray();
-        try {
-            DatagramPacket dp = new DatagramPacket(buf, buf.length,
-                    new InetSocketAddress(IP, udpPort));
-            ds.send(dp);
+            byte[] buf = arrayOutputStream.toByteArray();
+            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
+            datagramSocket.send(datagramPacket);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
+    public void parse(DataInputStream inputStream) {
+        try {
+            int id = inputStream.readInt();
+            if (tankClient.tank.getId() == id) return;
+            int x = inputStream.readInt();
+            int y = inputStream.readInt();
+            Direction direction = Direction.values()[inputStream.readInt()];
+            Direction canonDirection = Direction.values()[inputStream.readInt()];
+
+            for (Tank t : tankClient.tanks) {
+                if (t.getId() == id) {
+                    t.setPosX(x);
+                    t.setPosY(y);
+                    t.setDirection(direction);
+                    t.setCanonDirection(canonDirection);
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

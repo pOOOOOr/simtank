@@ -141,23 +141,23 @@ public class NetClient {
             }
             Msg msg;
             switch (msgType) {
-                case Msg.TANK_NEW_MSG:
+                case Msg.TANK_NEW:
                     msg = new TankNewMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-                case Msg.TANK_MOVE_MSG:
+                case Msg.TANK_MOVE:
                     msg = new TankMoveMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-                case Msg.MISSILE_NEW_MSG:
+                case Msg.MISSILE_NEW:
                     msg = new MissileNewMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-                case Msg.TANK_DEAD_MSG:
+                case Msg.TANK_DEAD:
                     msg = new TankDeadMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-                case Msg.MISSILE_DEAD_MSG:
+                case Msg.MISSILE_DEAD:
                     msg = new MissileDeadMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;

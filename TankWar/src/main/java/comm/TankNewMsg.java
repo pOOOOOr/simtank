@@ -14,76 +14,54 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 public class TankNewMsg implements Msg {
-    int msgType = TANK_NEW_MSG;
-    Tank tank;
-    TankClient tc;
+    private Tank tank;
+    private TankClient tankClient;
 
     public TankNewMsg(Tank tank) {
         this.tank = tank;
     }
 
-    public TankNewMsg(TankClient tc) {
-        this.tc = tc;
+    public TankNewMsg(TankClient tankClient) {
+        this.tankClient = tankClient;
     }
 
-    public void send(DatagramSocket ds, String IP, int udpPort) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
+    public void send(DatagramSocket datagramSocket, String IP, int udpPort) {
+        ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
-            dos.writeInt(msgType);
-            dos.writeInt(tank.getId());
-            dos.writeInt(tank.getPosX());
-            dos.writeInt(tank.getPosY());
-            dos.writeInt(tank.getDirection().ordinal());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        byte[] buf = baos.toByteArray();
-        try {
-            DatagramPacket dp = new DatagramPacket(buf, buf.length,
-                    new InetSocketAddress(IP, udpPort));
-            ds.send(dp);
+            outputStream.writeInt(TANK_NEW);
+            outputStream.writeInt(tank.getId());
+            outputStream.writeInt(tank.getPosX());
+            outputStream.writeInt(tank.getPosY());
+            outputStream.writeInt(tank.getDirection().ordinal());
+            outputStream.writeInt(tank.getColorIndex());
+
+            byte[] buf = arrayOutputStream.toByteArray();
+            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
+            datagramSocket.send(datagramPacket);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
-    public void parse(DataInputStream dis) {
+    public void parse(DataInputStream inputStream) {
         try {
-            int id = dis.readInt();
-            if (tc.tank.getId() == id) {
-                return;
-            }
+            int id = inputStream.readInt();
+            if (tankClient.tank.getId() == id) return;
 
-            int x = dis.readInt();
-            int y = dis.readInt();
-            Direction direction = Direction.values()[dis.readInt()];
+            int x = inputStream.readInt();
+            int y = inputStream.readInt();
+            Direction direction = Direction.values()[inputStream.readInt()];
 
-            boolean exist = false;
-            for (int i = 0; i < tc.tanks.size(); i++) {
-                Tank t = tc.tanks.get(i);
-                if (t.getId() == id) {
-                    exist = true;
-                    break;
-                }
-            }
+            for (Tank t : tankClient.tanks)
+                if (t.getId() == id) return;
 
-            if (!exist) {
-                TankNewMsg tnMsg = new TankNewMsg(tc.tank);
-                tc.netClient.send(tnMsg);
-
-                Tank t = new Tank(x, y, direction, tc);
-                t.setId(id);
-                tc.tanks.add(t);
-            }
-
+            tankClient.netClient.send(new TankNewMsg(tankClient.tank));
+            tankClient.tanks.add(new Tank(id, x, y, direction, tankClient));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 }

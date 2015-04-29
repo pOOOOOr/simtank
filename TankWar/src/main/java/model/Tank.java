@@ -6,6 +6,7 @@ import main.java.comm.TankMoveMsg;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Tank {
@@ -31,6 +32,11 @@ public class Tank {
         this.direction = direction;
         this.tankClient = tankClient;
         this.color = colors[r.nextInt(colors.length)];
+    }
+
+    public Tank(int id, int posX, int posY, Direction direction, TankClient tankClient) {
+        this(posX, posY, direction, tankClient);
+        this.id = id;
     }
 
     public int getId() {
@@ -59,6 +65,10 @@ public class Tank {
 
     public Color getColor() {
         return color;
+    }
+
+    public int getColorIndex() {
+        return Arrays.asList(colors).indexOf(this.color);
     }
 
     public Direction getDirection() {

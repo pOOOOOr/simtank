@@ -5,13 +5,13 @@ import java.net.DatagramSocket;
 
 public interface Msg {
 
-    int TANK_NEW_MSG = 1;
-    int TANK_MOVE_MSG = 2;
-    int MISSILE_NEW_MSG = 3;
-    int TANK_DEAD_MSG = 4;
-    int MISSILE_DEAD_MSG = 5;
+    int TANK_NEW = 1;
+    int TANK_MOVE = 2;
+    int TANK_DEAD = 3;
+    int MISSILE_NEW = 4;
+    int MISSILE_DEAD = 5;
 
-    void send(DatagramSocket ds, String IP, int udpPort);
+    void send(DatagramSocket datagramSocket, String IP, int udpPort);
 
-    void parse(DataInputStream dis);
+    void parse(DataInputStream inputStream);
 }

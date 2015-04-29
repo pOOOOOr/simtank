@@ -29,6 +29,11 @@ public class Missile {
         this.rectangle = new Rectangle(x, y, WIDTH, HEIGHT);
     }
 
+    public Missile(int id, int tankID, int x, int y, Direction direction, TankClient tankClient) {
+        this(tankID, x, y, direction, tankClient);
+        this.id = id;
+    }
+
     public boolean isLive() {
         return live;
     }
@@ -43,10 +48,6 @@ public class Missile {
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getX() {

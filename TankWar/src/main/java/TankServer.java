@@ -23,43 +23,13 @@ public class TankServer {
 
     private String generateClientsMessage() {
         StringBuilder message = new StringBuilder();
-
+        // TODO: make leader node the first element
         for (Client c : clients) {
             message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort()));
         }
         message.append("\n");
 
         return message.toString();
-    }
-
-    /*
-    * send client table
-    * health check
-    * */
-    private class Beat implements Runnable {
-        @Override
-        public void run() {
-            DataInputStream inputStream;
-            DataOutputStream outputStream;
-
-            while (true) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                for (Socket s : sockets) {
-                    try {
-                        inputStream = new DataInputStream(s.getInputStream());
-                        System.out.println(String.format("message from [%s]: %s.", s.getInetAddress(), inputStream.readInt()));
-                        outputStream = new DataOutputStream(s.getOutputStream());
-                        outputStream.writeBytes(generateClientsMessage());
-                    } catch (IOException e) {
-                        System.out.println(s.getInetAddress() + " die");
-                    }
-                }
-            }
-        }
     }
 
     public void start() throws IOException {
@@ -80,6 +50,7 @@ public class TankServer {
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
                 outputStream.writeInt(INIT_ID++);
 
+
                 clients.add(new Client(IP, udpPort));
                 sockets.add(socket);
 
@@ -89,6 +60,62 @@ public class TankServer {
                 e.printStackTrace();
             } finally {
                 // if (socket != null) socket.close();
+            }
+        }
+    }
+
+    /*
+    * send client table
+    * health check
+    * */
+    private class Beat implements Runnable {
+        @Override
+        public void run() {
+            DataInputStream inputStream;
+            DataOutputStream outputStream;
+
+            while (true) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                for (Socket s : sockets) {
+                    try {
+                        if (!s.isClosed()) {
+                            inputStream = new DataInputStream(s.getInputStream());
+                            System.out.println(String.format("message from [%s]: %s.", s.getInetAddress(), inputStream.readInt()));
+                            outputStream = new DataOutputStream(s.getOutputStream());
+                            outputStream.writeBytes(generateClientsMessage());
+                        }
+                    } catch (IOException e) {
+                        System.out.println(s.getInetAddress() + " die");
+                        if (s != null) {
+                            try {
+                                s.close();
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                        sendPauseMessage();
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void sendPauseMessage() {
+            for (Socket socket : sockets) {
+                if (!socket.isClosed()) {
+                    try {
+                        DataOutputStream pauseStream = new DataOutputStream(socket.getOutputStream());
+                        pauseStream.writeBytes("pause\n");
+                        DataInputStream randomReturn = new DataInputStream(socket.getInputStream());
+                        randomReturn.readInt();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
