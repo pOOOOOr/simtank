@@ -25,7 +25,7 @@ public class TankServer {
         StringBuilder message = new StringBuilder();
 
         for (Client c : clients) {
-            message.append(c.getIp()).append("|");
+            message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort()));
         }
         message.append("\n");
 
