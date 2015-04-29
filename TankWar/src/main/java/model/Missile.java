@@ -64,7 +64,7 @@ public class Missile {
 
     public void draw(Graphics g) {
         Color c = g.getColor();
-        g.setColor(tankClient.tank.getColor());
+        tankClient.tanks.stream().filter(t -> t.getId() == tankID).forEach(t -> g.setColor(t.getColor()));
         g.fillOval(x, y, WIDTH, HEIGHT);
         g.setColor(c);
 

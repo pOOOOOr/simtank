@@ -17,7 +17,6 @@ public class MissileNewMsg implements Msg {
     private TankClient tankClient;
     private Missile missile;
 
-
     public MissileNewMsg(Missile missile) {
         this.missile = missile;
     }

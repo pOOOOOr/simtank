@@ -54,12 +54,13 @@ public class TankNewMsg implements Msg {
             int x = inputStream.readInt();
             int y = inputStream.readInt();
             Direction direction = Direction.values()[inputStream.readInt()];
+            int colorIndex = inputStream.readInt();
 
             for (Tank t : tankClient.tanks)
                 if (t.getId() == id) return;
 
             tankClient.netClient.send(new TankNewMsg(tankClient.tank));
-            tankClient.tanks.add(new Tank(id, x, y, direction, tankClient));
+            tankClient.tanks.add(new Tank(id, x, y, direction, tankClient, colorIndex));
         } catch (IOException e) {
             e.printStackTrace();
         }

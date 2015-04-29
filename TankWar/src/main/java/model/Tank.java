@@ -34,9 +34,10 @@ public class Tank {
         this.color = colors[r.nextInt(colors.length)];
     }
 
-    public Tank(int id, int posX, int posY, Direction direction, TankClient tankClient) {
+    public Tank(int id, int posX, int posY, Direction direction, TankClient tankClient, int colorIndex) {
         this(posX, posY, direction, tankClient);
         this.id = id;
+        this.color = colors[colorIndex];
     }
 
     public int getId() {
