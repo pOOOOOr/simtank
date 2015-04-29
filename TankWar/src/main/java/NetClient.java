@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class NetClient {
     DatagramSocket datagramSocket = null;
@@ -17,6 +18,7 @@ public class NetClient {
     private String IP;
     private int tcpPort;
     private int udpPort;
+    boolean isleader = false;
     Socket socket = null;
     DataOutputStream dataOutputStream = null;
     DataInputStream dataInputStream = null;
@@ -47,7 +49,7 @@ public class NetClient {
 
 
         try {
-            socket = new Socket("127.0.0.1",this.tcpPort);
+            socket = new Socket(this.IP,this.tcpPort);
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataOutputStream.writeInt(this.udpPort);
             dataInputStream = new DataInputStream(socket.getInputStream());
@@ -88,6 +90,12 @@ public class NetClient {
                     clients.clear();
                     String recv = dataInputStream.readLine().trim();
                     System.out.println(recv);
+                    if(recv.equals("pause"))
+                    {
+                        dataOutputStream.writeInt(new Random().nextInt(100));
+                        continue;
+                    }
+
                     String [] iptable = recv.split("\\|");
                     for(String s:iptable) {
                         System.out.println(s);
@@ -108,6 +116,35 @@ public class NetClient {
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+    private class UDPLeaderThread implements Runnable {
+
+        byte[] buf = new byte[1024];
+
+        public void run() {
+            //DatagramSocket datagramSocket = null;
+            //try {
+              //  datagramSocket = new DatagramSocket(UDP_PORT);
+            //} catch (SocketException e) {
+              //  e.printStackTrace();
+            //}
+            System.out.println("Leather thread started at port: " + udpPort);
+
+            try {
+                while (datagramSocket != null) {
+                    DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
+                    datagramSocket.receive(datagramPacket);
+                    for (Client c : clients) {
+                        datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                        datagramSocket.send(datagramPacket);
+
+                        System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
+                    }
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
