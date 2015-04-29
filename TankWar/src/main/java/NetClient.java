@@ -1,12 +1,15 @@
 package main.java;
 
 import main.java.comm.*;
+import main.java.model.Client;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NetClient {
     DatagramSocket datagramSocket = null;
@@ -14,6 +17,10 @@ public class NetClient {
     private String IP;
     private int tcpPort;
     private int udpPort;
+    Socket socket = null;
+    DataOutputStream dataOutputStream = null;
+    DataInputStream dataInputStream = null;
+    private List<Client> clients = new ArrayList<>();
 
     public NetClient(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -38,28 +45,25 @@ public class NetClient {
             e.printStackTrace();
         }
 
-        Socket socket = null;
+
         try {
-            socket = new Socket(this.IP, this.tcpPort);
-            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            socket = new Socket("127.0.0.1",this.tcpPort);
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataOutputStream.writeInt(this.udpPort);
-            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
 
             tankClient.tank.setId(id);
 
             System.out.println("Connected! ID: " + id);
+            new Thread(new ReadThread()).start();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                //socket.close();
             }
         }
 
@@ -72,7 +76,42 @@ public class NetClient {
     public void send(Msg msg) {
         msg.send(this.datagramSocket, this.IP, TankServer.UDP_PORT);
     }
-
+    private class ReadThread implements Runnable
+    {
+        public void run()
+        {
+            try {
+                while(true){
+                    dataOutputStream.writeInt(1);
+                    //dos.writeInt(1);
+                    //System.out.println(dataInputStream.readLine());
+                    clients.clear();
+                    String recv = dataInputStream.readLine().trim();
+                    System.out.println(recv);
+                    String [] iptable = recv.split("\\|");
+                    for(String s:iptable) {
+                        System.out.println(s);
+                        String [] temp = s.split(":");
+                        Client c = new Client(temp[0], Integer.parseInt(temp[1]));
+                        clients.add(c);
+                    }
+                    for(Client c:clients)
+                    {
+                        System.out.println(c.getIp());
+                    }
+                    System.out.println("Iptable retrived!");
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
