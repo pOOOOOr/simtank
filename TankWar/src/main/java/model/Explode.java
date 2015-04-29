@@ -1,7 +1,5 @@
 package main.java.model;
 
-import main.java.TankClient;
-
 import java.awt.*;
 
 public class Explode {

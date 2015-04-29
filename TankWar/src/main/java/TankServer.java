@@ -1,5 +1,7 @@
 package main.java;
 
+import main.java.model.Client;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,7 +25,7 @@ public class TankServer {
         StringBuilder message = new StringBuilder();
 
         for (Client c : clients) {
-            message.append(c.IP).append("|");
+            message.append(c.getIp()).append("|");
         }
         message.append("\n");
 
@@ -68,7 +70,7 @@ public class TankServer {
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
 
         while (true) {
-            Socket socket = null;
+            Socket socket;
             try {
                 socket = serverSocket.accept();
                 DataInputStream inputStream = new DataInputStream(socket.getInputStream());
@@ -91,16 +93,6 @@ public class TankServer {
         }
     }
 
-    private class Client {
-        String IP;
-        int udpPort;
-
-        public Client(String IP, int udpPort) {
-            this.IP = IP;
-            this.udpPort = udpPort;
-        }
-    }
-
     private class UDPThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -119,10 +111,10 @@ public class TankServer {
                     DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
                     datagramSocket.receive(datagramPacket);
                     for (Client c : clients) {
-                        datagramPacket.setSocketAddress(new InetSocketAddress(c.IP, c.udpPort));
+                        datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                         datagramSocket.send(datagramPacket);
 
-                        System.out.println(String.format("Package sent to %s:%s", c.IP, c.udpPort));
+                        System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
                     }
                 }
             } catch (IOException e) {

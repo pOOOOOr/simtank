@@ -79,7 +79,7 @@ public class Tank {
         Color c = g.getColor();
         g.setColor(this.color);
         g.fillRect(posX, posY, WIDTH, HEIGHT);
-        g.drawString("id:" + id, posX, posY - 10);
+        g.drawString(String.valueOf(id), posX, posY - 2);
         g.setColor(c);
 
         switch (canonDirection) {

@@ -34,9 +34,7 @@ public class TankClient extends Frame {
 
     @Override
     public void paint(Graphics g) {
-        // g.drawString("missiles count:" + missiles.size(), 10, 50);
-        // g.drawString("explodes count:" + explodes.size(), 10, 70);
-        g.drawString("tanks: " + tanks.size(), 10, 40);
+        g.drawString("tanks: " + tanks.size(), 10, GAME_HEIGHT - 20);
 
         for (Missile m : missiles) {
             if (m.hit(tank)) {

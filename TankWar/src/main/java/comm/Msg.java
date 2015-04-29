@@ -12,5 +12,6 @@ public interface Msg {
     int MISSILE_DEAD_MSG = 5;
 
     void send(DatagramSocket ds, String IP, int udpPort);
+
     void parse(DataInputStream dis);
 }
