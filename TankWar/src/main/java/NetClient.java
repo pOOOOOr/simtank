@@ -2,7 +2,6 @@ package main.java;
 
 import main.java.comm.*;
 import main.java.model.Client;
-import main.java.model.MyLock;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -26,7 +25,6 @@ public class NetClient {
     private DataInputStream dataInputStream = null;
     private List<Client> clients = new ArrayList<>();
     private Client leader = null;
-    private MyLock clientsLock = new MyLock();
 
     public NetClient(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -159,13 +157,11 @@ public class NetClient {
                                 datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                                 datagramSocket.send(datagramPacket);
 
-                                System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
+                                //System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
                             }
                         }
                     }
                     parse(datagramPacket);
-
-                    System.out.println("a packet received from leader!");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
