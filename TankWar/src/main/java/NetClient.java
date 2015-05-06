@@ -13,16 +13,28 @@ import java.util.List;
 import java.util.Random;
 
 public class NetClient {
-    DatagramSocket datagramSocket = null;
-    boolean isLeader = false;
-    Socket socket = null;
-    DataOutputStream dataOutputStream = null;
-    DataInputStream dataInputStream = null;
+    private DatagramSocket datagramSocket = null;
     private TankClient tankClient;
     private String IP;
     private int tcpPort;
     private int udpPort;
+    boolean isLeader = false;
+    private Socket socket = null;
+    private DataOutputStream dataOutputStream = null;
+    private DataInputStream dataInputStream = null;
+    private InetAddress addr = getInetAddress();
+    String myip=addr.getHostAddress();//获得本机IP
     private List<Client> clients = new ArrayList<>();
+    public static InetAddress getInetAddress(){
+
+        try{
+            return InetAddress.getLocalHost();
+        }catch(UnknownHostException e){
+            System.out.println("unknown host!");
+        }
+        return null;
+
+    }
 
     public NetClient(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -49,11 +61,12 @@ public class NetClient {
 
 
         try {
-            socket = new Socket(this.IP, this.tcpPort);
+            socket = new Socket(this.IP,this.tcpPort);
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataOutputStream.writeInt(this.udpPort);
             dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
+
             tankClient.tank.setId(id);
             tankClient.tanks.add(tankClient.tank);
 
@@ -78,33 +91,43 @@ public class NetClient {
     public void send(Msg msg) {
         msg.send(this.datagramSocket, this.IP, TankServer.UDP_PORT);
     }
-
-    private class IptableThread implements Runnable {
-        public void run() {
+    private class IptableThread implements Runnable
+    {
+        public void run()
+        {
             try {
-                while (true) {
+                while(true){
                     dataOutputStream.writeInt(1);
                     //dos.writeInt(1);
                     //System.out.println(dataInputStream.readLine());
                     clients.clear();
+                    //System.out.println("这里卡住");
                     String recv = dataInputStream.readLine().trim();
                     System.out.println(recv);
-                    if (recv.equals("pause")) {
+                    if(recv.equals("pause"))
+                    {
                         dataOutputStream.writeInt(new Random().nextInt(100));
                         continue;
                     }
 
-                    String[] iptable = recv.split("\\|");
-                    for (String s : iptable) {
+                    String [] iptable = recv.split("\\|");
+                    for(String s:iptable) {
                         System.out.println(s);
-                        String[] temp = s.split(":");
+                        String [] temp = s.split(":");
                         Client c = new Client(temp[0], Integer.parseInt(temp[1]));
                         clients.add(c);
                     }
-                    for (Client c : clients) {
+                    for(Client c:clients)
+                    {
                         System.out.println(c.getIp());
                     }
                     System.out.println("Iptable retrived!");
+                    //System.out.println(myip);
+                    if(clients.get(0).getIp().equals(myip))
+                        {
+                            isLeader = true;
+                            System.out.println("I am leader!");
+                        }
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -117,7 +140,6 @@ public class NetClient {
             }
         }
     }
-
     /*private class UDPLeaderThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -160,7 +182,8 @@ public class NetClient {
                 try {
                     datagramSocket.receive(datagramPacket);
                     parse(datagramPacket);
-                    if (isLeader) {
+                    if(isLeader)
+                    {
                         for (Client c : clients) {
                             datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                             datagramSocket.send(datagramPacket);
