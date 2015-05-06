@@ -41,9 +41,8 @@ public class TankServer {
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
 
         while (true) {
-            Socket socket;
             try {
-                socket = serverSocket.accept();
+                Socket socket = serverSocket.accept();
                 DataInputStream inputStream = new DataInputStream(socket.getInputStream());
                 String IP = socket.getInetAddress().getHostAddress();
                 int udpPort = inputStream.readInt();
