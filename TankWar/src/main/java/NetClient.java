@@ -2,6 +2,7 @@ package main.java;
 
 import main.java.comm.*;
 import main.java.model.Client;
+import main.java.model.MyLock;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -13,31 +14,33 @@ import java.util.List;
 import java.util.Random;
 
 public class NetClient {
+    boolean isLeader = false;
+    String myip = getInetAddress().getHostAddress(); //获得本机IP
     private DatagramSocket datagramSocket = null;
     private TankClient tankClient;
     private String IP;
     private int tcpPort;
     private int udpPort;
-    boolean isLeader = false;
     private Socket socket = null;
     private DataOutputStream dataOutputStream = null;
     private DataInputStream dataInputStream = null;
-    private InetAddress addr = getInetAddress();
-    String myip=addr.getHostAddress();//获得本机IP
     private List<Client> clients = new ArrayList<>();
-    public static InetAddress getInetAddress(){
+    private Client leader = null;
+    private MyLock clientsLock = new MyLock();
 
-        try{
+    public NetClient(TankClient tankClient) {
+        this.tankClient = tankClient;
+    }
+
+    public static InetAddress getInetAddress() {
+
+        try {
             return InetAddress.getLocalHost();
-        }catch(UnknownHostException e){
+        } catch (UnknownHostException e) {
             System.out.println("unknown host!");
         }
         return null;
 
-    }
-
-    public NetClient(TankClient tankClient) {
-        this.tankClient = tankClient;
     }
 
     public void setIP(String IP) {
@@ -59,9 +62,8 @@ public class NetClient {
             e.printStackTrace();
         }
 
-
         try {
-            socket = new Socket(this.IP,this.tcpPort);
+            socket = new Socket(this.IP, this.tcpPort);
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataOutputStream.writeInt(this.udpPort);
             dataInputStream = new DataInputStream(socket.getInputStream());
@@ -71,6 +73,8 @@ public class NetClient {
             tankClient.tanks.add(tankClient.tank);
 
             System.out.println("Connected! ID: " + id);
+
+            new Thread(new UDPRecvThread()).start();
             new Thread(new IptableThread()).start();
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -82,52 +86,51 @@ public class NetClient {
             }
         }
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         TankNewMsg tankNewMsg = new TankNewMsg(this.tankClient.tank);
         send(tankNewMsg);
-
-        new Thread(new UDPRecvThread()).start();
     }
 
     public void send(Msg msg) {
-        msg.send(this.datagramSocket, this.IP, TankServer.UDP_PORT);
+        msg.send(this.datagramSocket, leader.getIp(), leader.getUdpPort());
     }
-    private class IptableThread implements Runnable
-    {
-        public void run()
-        {
+
+    private class IptableThread implements Runnable {
+        public void run() {
             try {
-                while(true){
+                while (true) {
                     dataOutputStream.writeInt(1);
-                    //dos.writeInt(1);
-                    //System.out.println(dataInputStream.readLine());
-                    clients.clear();
-                    //System.out.println("这里卡住");
                     String recv = dataInputStream.readLine().trim();
                     System.out.println(recv);
-                    if(recv.equals("pause"))
-                    {
+
+                    if (recv.equals("pause")) {
                         dataOutputStream.writeInt(new Random().nextInt(100));
                         continue;
                     }
 
-                    String [] iptable = recv.split("\\|");
-                    for(String s:iptable) {
-                        System.out.println(s);
-                        String [] temp = s.split(":");
-                        Client c = new Client(temp[0], Integer.parseInt(temp[1]));
-                        clients.add(c);
-                    }
-                    for(Client c:clients)
-                    {
-                        System.out.println(c.getIp());
-                    }
-                    System.out.println("Iptable retrived!");
-                    //System.out.println(myip);
-                    if(clients.get(0).getIp().equals(myip))
-                        {
-                            isLeader = true;
-                            System.out.println("I am leader!");
+                    synchronized (clients) {
+                        clients.clear();
+                        String[] iptable = recv.split("\\|");
+                        for (String s : iptable) {
+                            String[] temp = s.split(":");
+                            Client c = new Client(temp[0], Integer.parseInt(temp[1]));
+                            clients.add(c);
                         }
+                    }
+
+                    if (leader == null || !leader.equals(clients.get(0)))
+                        leader = clients.get(0);
+
+                    if (leader.getIp().equals(myip)) {
+                        isLeader = true;
+                        System.out.println("I am leader!");
+                    }
+
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -135,42 +138,11 @@ public class NetClient {
                     }
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
     }
-    /*private class UDPLeaderThread implements Runnable {
 
-        byte[] buf = new byte[1024];
-
-        public void run() {
-            //DatagramSocket datagramSocket = null;
-            //try {
-            //  datagramSocket = new DatagramSocket(UDP_PORT);
-            //} catch (SocketException e) {
-            //  e.printStackTrace();
-            //}
-            if (isLeader) {
-                System.out.println("Leather thread started at port: " + udpPort);
-
-                try {
-                    while (datagramSocket != null) {
-                        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
-                        datagramSocket.receive(datagramPacket);
-                        for (Client c : clients) {
-                            datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                            datagramSocket.send(datagramPacket);
-
-                            System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }*/
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -181,17 +153,19 @@ public class NetClient {
                 DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
                 try {
                     datagramSocket.receive(datagramPacket);
-                    parse(datagramPacket);
-                    if(isLeader)
-                    {
-                        for (Client c : clients) {
-                            datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                            datagramSocket.send(datagramPacket);
+                    if (isLeader) {
+                        synchronized (clients) {
+                            for (Client c : clients) {
+                                datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                                datagramSocket.send(datagramPacket);
 
-                            System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
+                                System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
+                            }
                         }
                     }
-                    System.out.println("a packet received from server!");
+                    parse(datagramPacket);
+
+                    System.out.println("a packet received from leader!");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
