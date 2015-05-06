@@ -5,8 +5,10 @@ import main.java.model.Client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class TankServer {
@@ -14,7 +16,7 @@ public class TankServer {
     public static final int UDP_PORT = 6666;
     private static int INIT_ID = 100;
     private List<Client> clients = new ArrayList<>();
-    private List<Socket> sockets = new ArrayList<>();
+    private Client currentLeader = null;
 
     public static void main(String[] args) throws IOException {
         TankServer tankServer = new TankServer();
@@ -23,10 +25,10 @@ public class TankServer {
 
     private String generateClientsMessage() {
         StringBuilder message = new StringBuilder();
-        // TODO: make leader node the first element
-        for (Client c : clients) {
-            message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort()));
-        }
+        if (currentLeader != null)
+            message.append(String.format("%s:%s|", currentLeader.getIp(), currentLeader.getUdpPort()));
+
+        clients.stream().filter(c -> !c.equals(currentLeader)).forEach(c -> message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort())));
         message.append("\n");
 
         return message.toString();
@@ -34,7 +36,6 @@ public class TankServer {
 
     public void start() throws IOException {
 
-        new Thread(new UDPThread()).start();
         new Thread(new Beat()).start();
 
         ServerSocket serverSocket = new ServerSocket(TCP_PORT);
@@ -50,9 +51,11 @@ public class TankServer {
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
                 outputStream.writeInt(INIT_ID++);
 
+                Client client = new Client(IP, udpPort, socket);
+                clients.add(client);
 
-                clients.add(new Client(IP, udpPort));
-                sockets.add(socket);
+                if (currentLeader == null)
+                    currentLeader = client;
 
                 System.out.println(String.format("Client %s:%s - UDP[%s] connect!",
                         socket.getInetAddress(), socket.getPort(), udpPort));
@@ -80,19 +83,22 @@ public class TankServer {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (Socket s : sockets) {
+                for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext();) {
+                    Client c = iterator.next();
                     try {
-                        if (!s.isClosed()) {
-                            inputStream = new DataInputStream(s.getInputStream());
-                            System.out.println(String.format("message from [%s]: %s.", s.getInetAddress(), inputStream.readInt()));
-                            outputStream = new DataOutputStream(s.getOutputStream());
+                        if (!c.getSocket().isClosed()) {
+                            inputStream = new DataInputStream(c.getSocket().getInputStream());
+                            System.out.println(String.format("message from [%s]: %s.", c.getSocket().getInetAddress(), inputStream.readInt()));
+                            outputStream = new DataOutputStream(c.getSocket().getOutputStream());
                             outputStream.writeBytes(generateClientsMessage());
                         }
                     } catch (IOException e) {
-                        System.out.println(s.getInetAddress() + " die");
-                        if (s != null) {
+                        System.out.println(c.getSocket().getInetAddress() + " die");
+                        if (c.getSocket() != null) {
                             try {
-                                s.close();
+                                c.getSocket().close();
+                                c.setSocket(null);
+                                iterator.remove();
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
@@ -105,48 +111,16 @@ public class TankServer {
         }
 
         private void sendPauseMessage() {
-            for (Socket socket : sockets) {
-                if (!socket.isClosed()) {
-                    try {
-                        DataOutputStream pauseStream = new DataOutputStream(socket.getOutputStream());
-                        pauseStream.writeBytes("pause\n");
-                        DataInputStream randomReturn = new DataInputStream(socket.getInputStream());
-                        randomReturn.readInt();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            clients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> {
+                try {
+                    DataOutputStream pauseStream = new DataOutputStream(client.getSocket().getOutputStream());
+                    pauseStream.writeBytes("pause\n");
+                    DataInputStream randomReturn = new DataInputStream(client.getSocket().getInputStream());
+                    randomReturn.readInt();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }
-        }
-    }
-
-    private class UDPThread implements Runnable {
-
-        byte[] buf = new byte[1024];
-
-        public void run() {
-            DatagramSocket datagramSocket = null;
-            try {
-                datagramSocket = new DatagramSocket(UDP_PORT);
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
-            System.out.println("UDP thread started at port: " + UDP_PORT);
-
-            try {
-                while (datagramSocket != null) {
-                    DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
-                    datagramSocket.receive(datagramPacket);
-                    for (Client c : clients) {
-                        datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                        datagramSocket.send(datagramPacket);
-
-                        System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            });
         }
     }
 }

@@ -51,7 +51,7 @@ public class TankClient extends Frame {
         for (Tank t : tanks)
             t.draw(g);
 
-        tank.draw(g);
+//        tank.draw(g);
     }
 
     @Override
@@ -83,6 +83,7 @@ public class TankClient extends Frame {
         this.setBackground(Color.GRAY);
         this.addKeyListener(new KeyMonitor());
         this.setVisible(true);
+        dialog.setVisible(true);
 
         new Thread(new PaintThread()).start();
     }

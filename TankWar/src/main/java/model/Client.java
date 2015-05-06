@@ -1,12 +1,28 @@
 package main.java.model;
 
+import java.net.Socket;
+
 public class Client {
     private String ip;
     private int udpPort;
+    private Socket socket;
 
     public Client(String ip, int udpPort) {
         this.ip = ip;
         this.udpPort = udpPort;
+    }
+
+    public Client(String ip, int udpPort, Socket socket) {
+        this(ip, udpPort);
+        this.socket = socket;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 
     public String getIp() {
