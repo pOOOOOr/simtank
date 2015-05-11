@@ -146,7 +146,7 @@ public class TankClient extends Frame {
                 String ip = ipField.getText().trim();
                 int tcpPort = Integer.parseInt(tcpPortField.getText().trim());
                 int udpPort = Integer.parseInt(udpPortField.getText().trim());
-                netClient.setIP(ip);
+                netClient.setServerIP(ip);
                 netClient.setTcpPort(tcpPort);
                 netClient.setUdpPort(udpPort);
                 netClient.connect();

@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Random;
 
 public class NetClient {
-    boolean isLeader = false;
-    String myip = getInetAddress().getHostAddress(); //获得本机IP
+    private boolean isLeader = false;
+    private String localIP = getInetAddress().getHostAddress();
     private DatagramSocket datagramSocket = null;
     private TankClient tankClient;
-    private String IP;
+    private String serverIP;
     private int tcpPort;
     private int udpPort;
     private Socket socket = null;
@@ -30,19 +30,17 @@ public class NetClient {
         this.tankClient = tankClient;
     }
 
-    public static InetAddress getInetAddress() {
-
+    private static InetAddress getInetAddress() {
         try {
             return InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             System.out.println("unknown host!");
         }
         return null;
-
     }
 
-    public void setIP(String IP) {
-        this.IP = IP;
+    public void setServerIP(String serverIP) {
+        this.serverIP = serverIP;
     }
 
     public void setTcpPort(int tcpPort) {
@@ -60,19 +58,18 @@ public class NetClient {
             e.printStackTrace();
         }
 
+        new Thread(new UDPRecvThread()).start();
+
         try {
-            socket = new Socket(this.IP, this.tcpPort);
+            socket = new Socket(this.serverIP, this.tcpPort);
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataOutputStream.writeInt(this.udpPort);
             dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
-
             tankClient.tank.setId(id);
-            tankClient.tanks.add(tankClient.tank);
 
             System.out.println("Connected! ID: " + id);
 
-            new Thread(new UDPRecvThread()).start();
             new Thread(new IptableThread()).start();
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -85,12 +82,12 @@ public class NetClient {
         }
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        TankNewMsg tankNewMsg = new TankNewMsg(this.tankClient.tank);
+        TankNewMsg tankNewMsg = new TankNewMsg(this.tankClient);
         send(tankNewMsg);
     }
 
@@ -124,13 +121,13 @@ public class NetClient {
                     if (leader == null || !leader.equals(clients.get(0)))
                         leader = clients.get(0);
 
-                    if (leader.getIp().equals(myip)) {
+                    if (leader.getIp().equals(localIP) && leader.getUdpPort() == udpPort) {
                         isLeader = true;
                         System.out.println("I am leader!");
                     }
 
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

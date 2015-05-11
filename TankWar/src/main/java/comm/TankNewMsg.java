@@ -14,12 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 public class TankNewMsg implements Msg {
-    private Tank tank;
     private TankClient tankClient;
-
-    public TankNewMsg(Tank tank) {
-        this.tank = tank;
-    }
 
     public TankNewMsg(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -30,11 +25,11 @@ public class TankNewMsg implements Msg {
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
             outputStream.writeInt(TANK_NEW);
-            outputStream.writeInt(tank.getId());
-            outputStream.writeInt(tank.getPosX());
-            outputStream.writeInt(tank.getPosY());
-            outputStream.writeInt(tank.getDirection().ordinal());
-            outputStream.writeInt(tank.getColorIndex());
+            outputStream.writeInt(tankClient.tank.getId());
+            outputStream.writeInt(tankClient.tank.getPosX());
+            outputStream.writeInt(tankClient.tank.getPosY());
+            outputStream.writeInt(tankClient.tank.getDirection().ordinal());
+            outputStream.writeInt(tankClient.tank.getColorIndex());
 
             byte[] buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
@@ -49,17 +44,24 @@ public class TankNewMsg implements Msg {
     public void parse(DataInputStream inputStream) {
         try {
             int id = inputStream.readInt();
-            if (tankClient.tank.getId() == id) return;
+
+            // exist
+            for (Tank t : tankClient.tanks) {
+                if (t.getId() == id)
+                    return;
+            }
+
+            // self
+            if (tankClient.tank.getId() == id) {
+                tankClient.tanks.add(tankClient.tank);
+                return;
+            }
 
             int x = inputStream.readInt();
             int y = inputStream.readInt();
             Direction direction = Direction.values()[inputStream.readInt()];
             int colorIndex = inputStream.readInt();
 
-            for (Tank t : tankClient.tanks)
-                if (t.getId() == id) return;
-
-            tankClient.netClient.send(new TankNewMsg(tankClient.tank));
             tankClient.tanks.add(new Tank(id, x, y, direction, tankClient, colorIndex));
         } catch (IOException e) {
             e.printStackTrace();

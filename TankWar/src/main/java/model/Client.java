@@ -32,4 +32,13 @@ public class Client {
     public int getUdpPort() {
         return udpPort;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        if (!(obj instanceof Client)) return false;
+        Client client = (Client) obj;
+        return this.ip.equals(client.getIp()) && this.udpPort == client.getUdpPort();
+    }
 }
