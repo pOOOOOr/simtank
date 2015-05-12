@@ -63,6 +63,9 @@ public class TankNewMsg implements Msg {
             int colorIndex = inputStream.readInt();
 
             tankClient.tanks.add(new Tank(id, x, y, direction, tankClient, colorIndex));
+
+            // broadcast self for new client
+            tankClient.netClient.send(new TankNewMsg(tankClient));
         } catch (IOException e) {
             e.printStackTrace();
         }

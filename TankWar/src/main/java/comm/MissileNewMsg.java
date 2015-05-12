@@ -35,6 +35,7 @@ public class MissileNewMsg implements Msg {
             outputStream.writeInt(missile.getX());
             outputStream.writeInt(missile.getY());
             outputStream.writeInt(missile.getDirection().ordinal());
+
             byte[] buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
             datagramSocket.send(datagramPacket);

@@ -34,14 +34,15 @@ public class TankClient extends Frame {
 
     @Override
     public void paint(Graphics g) {
-        g.drawString("tanks: " + tanks.size(), 10, GAME_HEIGHT - 20);
+        g.drawString("tanks: " + tanks.stream().filter(t -> t.isLive()).toArray().length, 10, GAME_HEIGHT - 20);
+        if (netClient.isLeader()) {
+            g.drawString("Leader", 10, GAME_HEIGHT - 40);
+        }
 
         for (Missile m : missiles) {
             if (m.hit(tank)) {
-                TankDeadMsg tankDeadMsg = new TankDeadMsg(tank.getId());
-                netClient.send(tankDeadMsg);
-                MissileDeadMsg missileDeadMsg = new MissileDeadMsg(m.getTankID(), m.getId());
-                netClient.send(missileDeadMsg);
+                netClient.send(new TankDeadMsg(tank.getId()));
+                netClient.send(new MissileDeadMsg(m.getTankID(), m.getId()));
             }
             if (m.isLive()) m.draw(g);
         }

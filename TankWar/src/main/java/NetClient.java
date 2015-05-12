@@ -39,6 +39,10 @@ public class NetClient {
         return null;
     }
 
+    public boolean isLeader() {
+        return isLeader;
+    }
+
     public void setServerIP(String serverIP) {
         this.serverIP = serverIP;
     }
@@ -123,7 +127,6 @@ public class NetClient {
 
                     if (leader.getIp().equals(localIP) && leader.getUdpPort() == udpPort) {
                         isLeader = true;
-                        System.out.println("I am leader!");
                     }
 
                     try {
@@ -150,11 +153,10 @@ public class NetClient {
                     datagramSocket.receive(datagramPacket);
                     if (isLeader) {
                         synchronized (clients) {
-                            for (Client c : clients) {
+                            // send to non-leaders
+                            for (Client c : clients.subList(1, clients.size())) {
                                 datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                                 datagramSocket.send(datagramPacket);
-
-                                //System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
                             }
                         }
                     }

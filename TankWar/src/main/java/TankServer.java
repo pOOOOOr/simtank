@@ -18,6 +18,7 @@ public class TankServer {
     private Client currentLeader = null;
 
     public static void main(String[] args) throws IOException {
+        System.out.println("Server started....");
         TankServer tankServer = new TankServer();
         tankServer.start();
     }
@@ -81,7 +82,7 @@ public class TankServer {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext();) {
+                for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext(); ) {
                     Client c = iterator.next();
                     try {
                         if (!c.getSocket().isClosed()) {
@@ -91,7 +92,7 @@ public class TankServer {
                             outputStream.writeBytes(generateClientsMessage());
                         }
                     } catch (IOException e) {
-                        System.out.println(c.getSocket().getInetAddress() + " die");
+                        System.out.println(String.format("Client %s:%s dropped.", c.getIp(), c.getUdpPort()));
                         if (c.getSocket() != null) {
                             try {
                                 c.getSocket().close();
@@ -101,6 +102,7 @@ public class TankServer {
                                 e1.printStackTrace();
                             }
                         }
+
                         sendPauseMessage();
                         break;
                     }

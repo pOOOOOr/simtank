@@ -34,6 +34,7 @@ public class MissileDeadMsg implements Msg {
             outputStream.writeInt(MISSILE_DEAD);
             outputStream.writeInt(tankId);
             outputStream.writeInt(id);
+
             byte[] buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
             datagramSocket.send(datagramPacket);
