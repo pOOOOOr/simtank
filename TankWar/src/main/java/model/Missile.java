@@ -116,7 +116,7 @@ public class Missile {
         if (this.live && this.tankID != tank.getId() && tank.isLive() && this.rectangle.intersects(tank.getRect())) {
             this.live = false;
             tank.setLive(false);
-            tankClient.explodes.add(new Explode(x, y));
+            //tankClient.explodes.add(new Explode(x, y));
             return true;
         }
 

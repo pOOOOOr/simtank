@@ -2,7 +2,6 @@ package main.java;
 
 import main.java.comm.*;
 import main.java.model.Client;
-import main.java.model.Tank;
 
 import javax.swing.*;
 import java.io.ByteArrayInputStream;
@@ -109,11 +108,9 @@ public class NetClient {
 
                     if (recv.contains("Drop")) {
                         int tankid = Integer.parseInt(recv.split(":")[1]);
-                        for (Tank t : tankClient.tanks) {
-                            if (t.getId() == tankid) {
-                                t.setLive(false);
-                            }
-                        }
+                        tankClient.tanks.stream().filter(t -> t.getId() == tankid).forEach(t -> {
+                            t.setLive(false);
+                        });
 
                         int roll = JOptionPane.showConfirmDialog(null, "Roll a new leader", "Start", JOptionPane.DEFAULT_OPTION);
                         if (roll == 0) {

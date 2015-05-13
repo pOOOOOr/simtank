@@ -40,7 +40,7 @@ public class TankClient extends Frame {
         for (Missile m : missiles) {
             if (m.hit(tank)) {
                 netClient.send(new TankDeadMsg(tank.getId()));
-                netClient.send(new MissileDeadMsg(m.getTankID(), m.getId()));
+                netClient.send(new MissileDeadMsg(m.getTankID(), m.getId(), tank));
             }
             if (m.isLive()) m.draw(g);
         }

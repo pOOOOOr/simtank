@@ -3,6 +3,7 @@ package main.java.comm;
 import main.java.TankClient;
 import main.java.model.Explode;
 import main.java.model.Missile;
+import main.java.model.Tank;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -17,10 +18,12 @@ public class MissileDeadMsg implements Msg {
     private TankClient tankClient;
     private int tankId;
     private int id;
+    private Tank target;
 
-    public MissileDeadMsg(int tankId, int id) {
+    public MissileDeadMsg(int tankId, int id, Tank tank) {
         this.tankId = tankId;
         this.id = id;
+        this.target = tank;
     }
 
     public MissileDeadMsg(TankClient tankClient) {
@@ -52,7 +55,7 @@ public class MissileDeadMsg implements Msg {
             for (Missile m : tankClient.missiles) {
                 if (m.getTankID() == tankId && m.getId() == id) {
                     m.setLive(false);
-                    tankClient.explodes.add(new Explode(m.getX(), m.getY()));
+                    tankClient.explodes.add(new Explode(target.getPosX(), target.getPosY()));
                     break;
                 }
             }

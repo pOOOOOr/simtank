@@ -52,7 +52,9 @@ public class TankServer {
                 outputStream.writeInt(tankID);
                 Client client = new Client(IP, udpPort, socket);
                 client.setTankID(tankID);
-                clients.add(client);
+                synchronized (clients) {
+                    clients.add(client);
+                }
 
                 if (currentLeader == null)
                     currentLeader = client;
@@ -84,35 +86,42 @@ public class TankServer {
                     e.printStackTrace();
                 }
 
-                for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext(); ) {
-                    Client client = iterator.next();
-                    try {
-                        if (!client.getSocket().isClosed()) {
-                            inputStream = new DataInputStream(client.getSocket().getInputStream());
-                            System.out.println(String.format("message from [%s]: %s.", client.getSocket().getInetAddress(), inputStream.readInt()));
-                            outputStream = new DataOutputStream(client.getSocket().getOutputStream());
-                            outputStream.writeBytes(generateClientsMessage());
-                        }
-                    } catch (IOException e) {
-                        System.out.println(String.format("Client %s:%s dropped.", client.getIp(), client.getUdpPort()));
-                        if (client.getSocket() != null) {
-                            try {
-                                client.getSocket().close();
-                                client.setSocket(null);
-                                iterator.remove();
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
+                synchronized (clients) {
+                    for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext(); ) {
+                        Client client = iterator.next();
+                        try {
+                            if (!client.getSocket().isClosed()) {
+                                inputStream = new DataInputStream(client.getSocket().getInputStream());
+                                System.out.println(String.format("message from [%s]: %s.", client.getSocket().getInetAddress(), inputStream.readInt()));
+                                outputStream = new DataOutputStream(client.getSocket().getOutputStream());
+                                outputStream.writeBytes(generateClientsMessage());
                             }
-                        }
+                        } catch (IOException e) {
+                            System.out.println(String.format("Client %s:%s dropped.", client.getIp(), client.getUdpPort()));
+                            if (client.getSocket() != null) {
+                                try {
+                                    client.getSocket().close();
+                                    client.setSocket(null);
+                                    iterator.remove();
+                                } catch (IOException e1) {
+                                    e1.printStackTrace();
+                                }
+                            }
 
-                        clientDrops(client.getTankID());
-                        break;
+                            clientDrops(client.getTankID());
+                            break;
+                        }
                     }
                 }
             }
         }
 
         private void clientDrops(int tankID) {
+            if (clients.size() == 0) {
+                System.out.println("No player exists.");
+                currentLeader = null;
+            }
+
             clients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> {
                 try {
                     DataOutputStream pauseStream = new DataOutputStream(client.getSocket().getOutputStream());
