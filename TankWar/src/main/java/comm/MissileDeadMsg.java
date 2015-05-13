@@ -13,6 +13,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.stream.Collectors;
 
 public class MissileDeadMsg implements Msg {
     private TankClient tankClient;
@@ -37,6 +38,7 @@ public class MissileDeadMsg implements Msg {
             outputStream.writeInt(MISSILE_DEAD);
             outputStream.writeInt(tankId);
             outputStream.writeInt(id);
+            outputStream.writeInt(target.getId());
 
             byte[] buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
@@ -55,10 +57,12 @@ public class MissileDeadMsg implements Msg {
             for (Missile m : tankClient.missiles) {
                 if (m.getTankID() == tankId && m.getId() == id) {
                     m.setLive(false);
-                    tankClient.explodes.add(new Explode(target.getPosX(), target.getPosY()));
                     break;
                 }
             }
+
+            int targetID = inputStream.readInt();
+            tankClient.explodes.addAll(tankClient.tanks.stream().filter(t -> t.getId() == targetID).map(t -> new Explode(t.getPosX(), t.getPosY())).collect(Collectors.toList()));
         } catch (IOException e) {
             e.printStackTrace();
         }
