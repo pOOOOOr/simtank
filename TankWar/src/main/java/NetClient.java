@@ -70,7 +70,6 @@ public class NetClient {
             dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
             tankClient.tank.setId(id);
-            tankClient.tanks.add(tankClient.tank);
 
             System.out.println("Connected! ID: " + id);
 
@@ -85,10 +84,12 @@ public class NetClient {
             }
         }
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        while (leader == null) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         TankNewMsg tankNewMsg = new TankNewMsg(this.tankClient);
@@ -110,7 +111,7 @@ public class NetClient {
                         int roll = showConfirmDialog(null, "Roll a new leader");
 
                         if (roll == 0) {
-                            dataOutputStream.writeInt(new Random().nextInt(100)+2);
+                            dataOutputStream.writeInt(new Random().nextInt(100) + 2);
                             continue;
                         } else {
                             showMessageDialog(null, "do not want to roll, quit game");
@@ -147,7 +148,6 @@ public class NetClient {
         }
     }
 
-   
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -158,18 +158,16 @@ public class NetClient {
                 DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
                 try {
                     datagramSocket.receive(datagramPacket);
-                    parse(datagramPacket);
                     if (isLeader) {
                         synchronized (clients) {
                             // send to non-leaders
                             for (Client c : clients.subList(1, clients.size())) {
-
-                                    datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                                    datagramSocket.send(datagramPacket);
-                                }
-
+                                datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                                datagramSocket.send(datagramPacket);
+                            }
                         }
                     }
+
                     parse(datagramPacket);
                 } catch (IOException e) {
                     e.printStackTrace();
