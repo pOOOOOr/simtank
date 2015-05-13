@@ -2,8 +2,8 @@ package main.java;
 
 import main.java.comm.*;
 import main.java.model.Client;
-import main.java.model.Tank;
 
+import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,9 +12,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import static javax.swing.JOptionPane.showConfirmDialog;
-import static javax.swing.JOptionPane.showMessageDialog;
 
 public class NetClient {
     private boolean isLeader = false;
@@ -110,7 +107,7 @@ public class NetClient {
                     System.out.println(recv);
                     if (recv.contains("Drop")) {
                         int tankid=Integer.parseInt(recv.split(":")[1]);
-                        int roll = showConfirmDialog(null, "Roll a new leader");
+                        int roll= JOptionPane.showConfirmDialog(null, "Roll a new leader", "Start", JOptionPane.DEFAULT_OPTION);
                         for(Tank t :tankClient.tanks)
                         {
                             if(t.getId()==tankid)
@@ -119,11 +116,8 @@ public class NetClient {
                         if (roll == 0) {
                             dataOutputStream.writeInt(new Random().nextInt(100) + 2);
                             continue;
-                        } else {
-                            showMessageDialog(null, "do not want to roll, quit game");
-                            System.exit(1);
                         }
-                    }
+                    
 
                     synchronized (clients) {
                         clients.clear();
