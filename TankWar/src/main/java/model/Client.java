@@ -7,6 +7,7 @@ public class Client {
     private int udpPort;
     private Socket socket;
     private int weight = 0;
+    private int tankID = 0;
 
     public Client(String ip, int udpPort) {
         this.ip = ip;
@@ -16,6 +17,14 @@ public class Client {
     public Client(String ip, int udpPort, Socket socket) {
         this(ip, udpPort);
         this.socket = socket;
+    }
+
+    public int getTankID() {
+        return tankID;
+    }
+
+    public void setTankID(int tankID) {
+        this.tankID = tankID;
     }
 
     public int getWeight() {

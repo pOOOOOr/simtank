@@ -48,9 +48,10 @@ public class TankServer {
                 int udpPort = inputStream.readInt();
 
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-                outputStream.writeInt(INIT_ID++);
-
+                int tankID = INIT_ID++;
+                outputStream.writeInt(tankID);
                 Client client = new Client(IP, udpPort, socket);
+                client.setTankID(tankID);
                 clients.add(client);
 
                 if (currentLeader == null)
@@ -104,18 +105,18 @@ public class TankServer {
                             }
                         }
 
-                        sendPauseMessage();
+                        clientDrops(client.getTankID());
                         break;
                     }
                 }
             }
         }
 
-        private void sendPauseMessage() {
+        private void clientDrops(int tankID) {
             clients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> {
                 try {
                     DataOutputStream pauseStream = new DataOutputStream(client.getSocket().getOutputStream());
-                    pauseStream.writeBytes("pause\n");
+                    pauseStream.writeBytes(String.format("Drop:%s\n", tankID));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
