@@ -31,7 +31,8 @@ public class TankServer {
         clients.stream().filter(c -> !c.equals(currentLeader)).forEach(c -> message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort())));
         message.append("\n");
 
-        return message.toString();
+        System.out.println("send");
+        return "pause\n";
     }
 
     public void start() throws IOException {

@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static javax.swing.JOptionPane.showConfirmDialog;
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class NetClient {
     private boolean isLeader = false;
     private String localIP = getInetAddress().getHostAddress();
@@ -71,6 +74,7 @@ public class NetClient {
             dataInputStream = new DataInputStream(socket.getInputStream());
             int id = dataInputStream.readInt();
             tankClient.tank.setId(id);
+            tankClient.tanks.add(tankClient.tank);
 
             System.out.println("Connected! ID: " + id);
 
@@ -104,12 +108,25 @@ public class NetClient {
             try {
                 while (true) {
                     dataOutputStream.writeInt(1);
+                    //dos.writeInt(1);
+                    //System.out.println(dataInputStream.readLine());
+                    clients.clear();
+                    
                     String recv = dataInputStream.readLine().trim();
-                    System.out.println(recv);
+                    //System.out.println(recv);
+                    //System.out.println("SHOU DAO DONG XI %S" + recv);
+                    if(recv.equals("pause"))
+                    {
+                        System.out.println("here");
+                        int roll =  showConfirmDialog(null, "Roll a new leader");
 
-                    if (recv.equals("pause")) {
+                        if (roll ==0){
                         dataOutputStream.writeInt(new Random().nextInt(100));
-                        continue;
+                        continue;}
+                        else{
+                            showMessageDialog(null,"do not want roll, quite game");
+                            System.exit(1);
+                        }
                     }
 
                     synchronized (clients) {
@@ -136,11 +153,43 @@ public class NetClient {
                     }
                 }
             } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
     }
 
+    /*private class UDPLeaderThread implements Runnable {
+
+        byte[] buf = new byte[1024];
+
+        public void run() {
+            //DatagramSocket datagramSocket = null;
+            //try {
+            //  datagramSocket = new DatagramSocket(UDP_PORT);
+            //} catch (SocketException e) {
+            //  e.printStackTrace();
+            //}
+            if (isLeader) {
+                System.out.println("Leather thread started at port: " + udpPort);
+
+                try {
+                    while (datagramSocket != null) {
+                        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
+                        datagramSocket.receive(datagramPacket);
+                        for (Client c : clients) {
+                            datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                            datagramSocket.send(datagramPacket);
+
+                            System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }*/
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -151,6 +200,7 @@ public class NetClient {
                 DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
                 try {
                     datagramSocket.receive(datagramPacket);
+                    parse(datagramPacket);
                     if (isLeader) {
                         synchronized (clients) {
                             // send to non-leaders
