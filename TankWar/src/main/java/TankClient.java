@@ -7,11 +7,9 @@ import main.java.model.Explode;
 import main.java.model.Missile;
 import main.java.model.Tank;
 
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,18 +118,28 @@ public class TankClient extends Frame {
     class ConnDialog extends Dialog {
         Button button = new Button("Set");
         TextField ipField = new TextField("127.0.0.1", 12);
-        TextField tcpPortField = new TextField(String.valueOf(TankServer.TCP_PORT), 4);
         TextField udpPortField = new TextField("1234", 4);
 
         public ConnDialog() {
             super(TankClient.this, true);
 
+            Action action = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String ip = ipField.getText().trim();
+                    int udpPort = Integer.parseInt(udpPortField.getText().trim());
+                    netClient.setServerIP(ip);
+                    netClient.setUdpPort(udpPort);
+                    netClient.connect();
+                    setVisible(false);
+                }
+            };
+
             this.setTitle("Connection settings");
             this.setLayout(new FlowLayout());
             this.add(new Label("Server IP:"));
             this.add(ipField);
-            this.add(new Label("TCP Port:"));
-            this.add(tcpPortField);
+            ipField.addActionListener(action);
             this.add(new Label("UDP Port:"));
             this.add(udpPortField);
             this.add(button);
@@ -143,16 +151,7 @@ public class TankClient extends Frame {
                     setVisible(false);
                 }
             });
-            button.addActionListener(e -> {
-                String ip = ipField.getText().trim();
-                int tcpPort = Integer.parseInt(tcpPortField.getText().trim());
-                int udpPort = Integer.parseInt(udpPortField.getText().trim());
-                netClient.setServerIP(ip);
-                netClient.setTcpPort(tcpPort);
-                netClient.setUdpPort(udpPort);
-                netClient.connect();
-                setVisible(false);
-            });
+            button.addActionListener(action);
         }
     }
 }

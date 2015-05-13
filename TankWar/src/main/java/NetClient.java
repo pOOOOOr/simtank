@@ -21,7 +21,7 @@ public class NetClient {
     private DatagramSocket datagramSocket = null;
     private TankClient tankClient;
     private String serverIP;
-    private int tcpPort;
+    private int tcpPort = TankServer.TCP_PORT;
     private int udpPort;
     private Socket socket = null;
     private DataOutputStream dataOutputStream = null;
@@ -48,10 +48,6 @@ public class NetClient {
 
     public void setServerIP(String serverIP) {
         this.serverIP = serverIP;
-    }
-
-    public void setTcpPort(int tcpPort) {
-        this.tcpPort = tcpPort;
     }
 
     public void setUdpPort(int udpPort) {
@@ -108,23 +104,17 @@ public class NetClient {
             try {
                 while (true) {
                     dataOutputStream.writeInt(1);
-                    //dos.writeInt(1);
-                    //System.out.println(dataInputStream.readLine());
                     clients.clear();
-                    
-                    String recv = dataInputStream.readLine().trim();
-                    //System.out.println(recv);
-                    //System.out.println("SHOU DAO DONG XI %S" + recv);
-                    if(recv.equals("pause"))
-                    {
-                        System.out.println("here");
-                        int roll =  showConfirmDialog(null, "Roll a new leader");
 
-                        if (roll ==0){
-                        dataOutputStream.writeInt(new Random().nextInt(100));
-                        continue;}
-                        else{
-                            showMessageDialog(null,"do not want roll, quite game");
+                    String recv = dataInputStream.readLine().trim();
+                    if (recv.equals("pause")) {
+                        int roll = showConfirmDialog(null, "Roll a new leader");
+
+                        if (roll == 0) {
+                            dataOutputStream.writeInt(new Random().nextInt(100));
+                            continue;
+                        } else {
+                            showMessageDialog(null, "do not want roll, quite game");
                             System.exit(1);
                         }
                     }
@@ -153,43 +143,11 @@ public class NetClient {
                     }
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
     }
 
-    /*private class UDPLeaderThread implements Runnable {
-
-        byte[] buf = new byte[1024];
-
-        public void run() {
-            //DatagramSocket datagramSocket = null;
-            //try {
-            //  datagramSocket = new DatagramSocket(UDP_PORT);
-            //} catch (SocketException e) {
-            //  e.printStackTrace();
-            //}
-            if (isLeader) {
-                System.out.println("Leather thread started at port: " + udpPort);
-
-                try {
-                    while (datagramSocket != null) {
-                        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
-                        datagramSocket.receive(datagramPacket);
-                        for (Client c : clients) {
-                            datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                            datagramSocket.send(datagramPacket);
-
-                            System.out.println(String.format("Package sent to %s:%s", c.getIp(), c.getUdpPort()));
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }*/
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -205,8 +163,10 @@ public class NetClient {
                         synchronized (clients) {
                             // send to non-leaders
                             for (Client c : clients.subList(1, clients.size())) {
-                                datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                                datagramSocket.send(datagramPacket);
+                                if (!c.getSocket().isClosed()) {
+                                    datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                                    datagramSocket.send(datagramPacket);
+                                }
                             }
                         }
                     }

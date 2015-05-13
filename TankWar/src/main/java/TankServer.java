@@ -31,8 +31,7 @@ public class TankServer {
         clients.stream().filter(c -> !c.equals(currentLeader)).forEach(c -> message.append(String.format("%s:%s|", c.getIp(), c.getUdpPort())));
         message.append("\n");
 
-        System.out.println("send");
-        return "pause\n";
+        return message.toString();
     }
 
     public void start() throws IOException {
@@ -83,21 +82,22 @@ public class TankServer {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 for (Iterator<Client> iterator = clients.iterator(); iterator.hasNext(); ) {
-                    Client c = iterator.next();
+                    Client client = iterator.next();
                     try {
-                        if (!c.getSocket().isClosed()) {
-                            inputStream = new DataInputStream(c.getSocket().getInputStream());
-                            System.out.println(String.format("message from [%s]: %s.", c.getSocket().getInetAddress(), inputStream.readInt()));
-                            outputStream = new DataOutputStream(c.getSocket().getOutputStream());
+                        if (!client.getSocket().isClosed()) {
+                            inputStream = new DataInputStream(client.getSocket().getInputStream());
+                            System.out.println(String.format("message from [%s]: %s.", client.getSocket().getInetAddress(), inputStream.readInt()));
+                            outputStream = new DataOutputStream(client.getSocket().getOutputStream());
                             outputStream.writeBytes(generateClientsMessage());
                         }
                     } catch (IOException e) {
-                        System.out.println(String.format("Client %s:%s dropped.", c.getIp(), c.getUdpPort()));
-                        if (c.getSocket() != null) {
+                        System.out.println(String.format("Client %s:%s dropped.", client.getIp(), client.getUdpPort()));
+                        if (client.getSocket() != null) {
                             try {
-                                c.getSocket().close();
-                                c.setSocket(null);
+                                client.getSocket().close();
+                                client.setSocket(null);
                                 iterator.remove();
                             } catch (IOException e1) {
                                 e1.printStackTrace();
@@ -117,11 +117,15 @@ public class TankServer {
                     DataOutputStream pauseStream = new DataOutputStream(client.getSocket().getOutputStream());
                     pauseStream.writeBytes("pause\n");
                     DataInputStream randomReturn = new DataInputStream(client.getSocket().getInputStream());
-                    randomReturn.readInt();
+                    client.setWeight(randomReturn.readInt());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+
+            for (Client c : clients) {
+                System.out.println(c.getWeight());
+            }
         }
     }
 }

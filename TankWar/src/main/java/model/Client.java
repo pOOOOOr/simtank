@@ -6,6 +6,7 @@ public class Client {
     private String ip;
     private int udpPort;
     private Socket socket;
+    private int weight = 0;
 
     public Client(String ip, int udpPort) {
         this.ip = ip;
@@ -15,6 +16,14 @@ public class Client {
     public Client(String ip, int udpPort, Socket socket) {
         this(ip, udpPort);
         this.socket = socket;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
     }
 
     public Socket getSocket() {
