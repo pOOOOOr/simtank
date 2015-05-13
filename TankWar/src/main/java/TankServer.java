@@ -116,15 +116,33 @@ public class TankServer {
                 try {
                     DataOutputStream pauseStream = new DataOutputStream(client.getSocket().getOutputStream());
                     pauseStream.writeBytes("pause\n");
-                    DataInputStream randomReturn = new DataInputStream(client.getSocket().getInputStream());
-                    client.setWeight(randomReturn.readInt());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
 
+            clients.stream().filter(client -> !client.getSocket().isClosed()).forEach(client -> {
+                try {
+                    DataInputStream randomReturn = new DataInputStream(client.getSocket().getInputStream());
+                    while (true) {
+                        int weight = randomReturn.readInt();
+                        if (weight != 1) {
+                            client.setWeight(weight);
+                            System.out.println(String.format("Client: %s:%s, Weight: %s", client.getIp(), client.getUdpPort(), client.getWeight()));
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            int currentWeight = 0;
             for (Client c : clients) {
-                System.out.println(c.getWeight());
+                if (c.getWeight() > currentWeight) {
+                    currentWeight = c.getWeight();
+                    currentLeader = c;
+                }
             }
         }
     }

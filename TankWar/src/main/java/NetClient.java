@@ -132,9 +132,7 @@ public class NetClient {
                     if (leader == null || !leader.equals(clients.get(0)))
                         leader = clients.get(0);
 
-                    if (leader.getIp().equals(localIP) && leader.getUdpPort() == udpPort) {
-                        isLeader = true;
-                    }
+                    isLeader = (leader.getIp().equals(localIP) && leader.getUdpPort() == udpPort);
 
                     try {
                         Thread.sleep(2000);
@@ -164,6 +162,7 @@ public class NetClient {
                             for (Client c : clients.subList(1, clients.size())) {
                                 datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                                 datagramSocket.send(datagramPacket);
+                                System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
                             }
                         }
                     }
