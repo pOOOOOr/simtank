@@ -104,17 +104,16 @@ public class NetClient {
             try {
                 while (true) {
                     dataOutputStream.writeInt(1);
-                    clients.clear();
-
                     String recv = dataInputStream.readLine().trim();
+                    System.out.println(recv);
                     if (recv.equals("pause")) {
                         int roll = showConfirmDialog(null, "Roll a new leader");
 
                         if (roll == 0) {
-                            dataOutputStream.writeInt(new Random().nextInt(100));
+                            dataOutputStream.writeInt(new Random().nextInt(100)+2);
                             continue;
                         } else {
-                            showMessageDialog(null, "do not want roll, quite game");
+                            showMessageDialog(null, "do not want to roll, quit game");
                             System.exit(1);
                         }
                     }
@@ -148,6 +147,7 @@ public class NetClient {
         }
     }
 
+   
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
@@ -163,11 +163,11 @@ public class NetClient {
                         synchronized (clients) {
                             // send to non-leaders
                             for (Client c : clients.subList(1, clients.size())) {
-                                if (!c.getSocket().isClosed()) {
+
                                     datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
                                     datagramSocket.send(datagramPacket);
                                 }
-                            }
+
                         }
                     }
                     parse(datagramPacket);
