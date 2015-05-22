@@ -1,6 +1,7 @@
 package main.java.comm;
 
 import main.java.TankClient;
+import main.java.model.Tank;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -16,10 +17,11 @@ import java.net.SocketException;
  */
 public class ItemTakeMsg implements Msg {
     private TankClient tankClient;
-    public ItemTakeMsg(TankClient tank)
-    {
-        tankClient = tank;
+
+    public ItemTakeMsg(TankClient tankClient) {
+        this.tankClient = tankClient;
     }
+
     @Override
     public void send(DatagramSocket datagramSocket, String IP, int udpPort) {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
@@ -40,18 +42,16 @@ public class ItemTakeMsg implements Msg {
 
     @Override
     public void parse(DataInputStream inputStream) {
-        int tankId = -1;
         try {
-            tankId = inputStream.readInt();
+            int id = inputStream.readInt();
+            for (Tank t : tankClient.tanks) {
+                if (t.getId() == id) {
+                    t.setHasItem(true);
+                    break;
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(tankId == this.tankClient.tank.getId())
-        {
-            this.tankClient.setHasItem(true);
-        }
-        else
-            this.tankClient.setHasItem(false);
-        this.tankClient.setSpItem(false);
     }
 }

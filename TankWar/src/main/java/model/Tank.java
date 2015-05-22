@@ -1,7 +1,6 @@
 package main.java.model;
 
 import main.java.TankClient;
-import main.java.comm.ItemTakeMsg;
 import main.java.comm.MissileNewMsg;
 import main.java.comm.TankMoveMsg;
 
@@ -17,7 +16,6 @@ public class Tank {
     private static int XSPEED = 5;
     private static Random r = new Random();
     private static Color[] colors = {Color.RED, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE};
-    private static Rectangle spItem= new Rectangle(TankClient.GAME_WIDTH/2-10,TankClient.GAME_HEIGHT/2-10,20,20);
     private int id;
     private int posX;
     private int posY;
@@ -26,6 +24,7 @@ public class Tank {
     private boolean left, up, right, down;
     private TankClient tankClient;
     private boolean live = true;
+    private boolean hasItem = false;
     private Color color;
 
     public Tank(int posX, int posY, Direction direction, TankClient tankClient) {
@@ -36,10 +35,11 @@ public class Tank {
         this.color = colors[r.nextInt(colors.length)];
     }
 
-    public Tank(int id, int posX, int posY, Direction direction, TankClient tankClient, int colorIndex) {
+    public Tank(int id, int posX, int posY, Direction direction, TankClient tankClient, int colorIndex, boolean hasItem) {
         this(posX, posY, direction, tankClient);
         this.id = id;
         this.color = colors[colorIndex];
+        this.hasItem = hasItem;
     }
 
     public int getId() {
@@ -165,13 +165,6 @@ public class Tank {
         if (posY < 30) posY = 30;
         if (posX + WIDTH > TankClient.GAME_WIDTH) posX = TankClient.GAME_WIDTH - WIDTH;
         if (posY + HEIGHT > TankClient.GAME_HEIGHT) posY = TankClient.GAME_HEIGHT - HEIGHT;
-        if(this.getRect().intersects(spItem))
-        {
-            System.out.println("hit");
-            ItemTakeMsg im = new ItemTakeMsg(tankClient);
-            tankClient.netClient.send(im);
-            System.out.println(tankClient.netClient.isLeader());
-        }
     }
 
     public void keyPressed(KeyEvent e) {
@@ -263,5 +256,13 @@ public class Tank {
 
     public void setLive(boolean live) {
         this.live = live;
+    }
+
+    public boolean isHasItem() {
+        return hasItem;
+    }
+
+    public void setHasItem(boolean hasItem) {
+        this.hasItem = hasItem;
     }
 }

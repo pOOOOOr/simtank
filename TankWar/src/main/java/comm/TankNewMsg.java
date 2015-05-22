@@ -30,6 +30,7 @@ public class TankNewMsg implements Msg {
             outputStream.writeInt(tankClient.tank.getPosY());
             outputStream.writeInt(tankClient.tank.getDirection().ordinal());
             outputStream.writeInt(tankClient.tank.getColorIndex());
+            outputStream.writeBoolean(tankClient.tank.isHasItem());
 
             byte[] buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
@@ -61,8 +62,9 @@ public class TankNewMsg implements Msg {
             int y = inputStream.readInt();
             Direction direction = Direction.values()[inputStream.readInt()];
             int colorIndex = inputStream.readInt();
+            boolean hasItem = inputStream.readBoolean();
 
-            tankClient.tanks.add(new Tank(id, x, y, direction, tankClient, colorIndex));
+            tankClient.tanks.add(new Tank(id, x, y, direction, tankClient, colorIndex, hasItem));
 
             // broadcast self for new client
             tankClient.netClient.send(new TankNewMsg(tankClient));

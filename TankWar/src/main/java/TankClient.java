@@ -1,5 +1,6 @@
 package main.java;
 
+import main.java.comm.ItemTakeMsg;
 import main.java.comm.MissileDeadMsg;
 import main.java.comm.TankDeadMsg;
 import main.java.model.Direction;
@@ -16,24 +17,15 @@ import java.util.List;
 public class TankClient extends Frame {
     public static final int GAME_WIDTH = 800;
     public static final int GAME_HEIGHT = 600;
-
+    private static Rectangle spItem = new Rectangle(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);
     public Tank tank = new Tank(100, 50, Direction.STOP, this);
     public List<Missile> missiles = new ArrayList<>();
     public List<Explode> explodes = new ArrayList<>();
     public List<Tank> tanks = new ArrayList<>();
     public NetClient netClient = new NetClient(this);
-    private boolean spItem = true;
-    private boolean hasItem = false;
     ConnDialog dialog = new ConnDialog();
     private Image image = null;
-    public void setHasItem(boolean b)
-    {
-        hasItem = b;
-    }
-    public void setSpItem(boolean b)
-    {
-        spItem = b;
-    }
+
     public static void main(String[] args) {
         TankClient tankClient = new TankClient();
         tankClient.launch();
@@ -45,15 +37,7 @@ public class TankClient extends Frame {
         if (netClient.isLeader()) {
             g.drawString("Leader", 10, GAME_HEIGHT - 40);
         }
-        if(hasItem)
-        {
-            g.drawString("Special Item!", 10, GAME_HEIGHT - 60);
-        }
-        if(spItem)
-        {
-            g.drawRect(GAME_WIDTH/2-10,GAME_HEIGHT/2-10,20,20);
-            g.fillRect(GAME_WIDTH/2-10,GAME_HEIGHT/2-10,20,20);
-        }
+
         for (Missile m : missiles) {
             if (m.hit(tank)) {
                 netClient.send(new TankDeadMsg(tank.getId()));
@@ -64,8 +48,28 @@ public class TankClient extends Frame {
 
         explodes.stream().filter(explode -> !explode.isDone()).forEach(explode -> explode.draw(g));
 
-        for (Tank t : tanks)
+        for (Tank t : tanks) {
             t.draw(g);
+            if (spItem != null && t.isHasItem()) {
+                spItem = null;
+            }
+        }
+
+        if (spItem != null && tank.getRect().intersects(spItem)) {
+            System.out.println("Get special!");
+            netClient.send(new ItemTakeMsg(this));
+            spItem = null;
+        }
+
+        if (tank.isHasItem()) {
+            g.drawString("Special Item!", 10, GAME_HEIGHT - 60);
+        }
+
+        if (spItem != null) {
+            g.drawRect(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);
+            g.setColor(Color.WHITE);
+            g.fillRect(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);
+        }
     }
 
     @Override
