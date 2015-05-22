@@ -10,6 +10,8 @@ public interface Msg {
     int TANK_DEAD = 3;
     int MISSILE_NEW = 4;
     int MISSILE_DEAD = 5;
+    int ITEM_TAKE = 6;
+    int ITEM_TAKEN = 7;
 
     void send(DatagramSocket datagramSocket, String IP, int udpPort);
 

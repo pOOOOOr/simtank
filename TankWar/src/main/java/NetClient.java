@@ -26,6 +26,7 @@ public class NetClient {
     private DataInputStream dataInputStream = null;
     private List<Client> clients = new ArrayList<>();
     private Client leader = null;
+    private long timeStampMin = Long.MAX_VALUE;
 
     public NetClient(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -157,6 +158,11 @@ public class NetClient {
                 try {
                     datagramSocket.receive(datagramPacket);
                     if (isLeader) {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         synchronized (clients) {
                             // send to non-leaders
                             for (Client c : clients.subList(1, clients.size())) {
@@ -205,8 +211,38 @@ public class NetClient {
                     msg = new MissileDeadMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-            }
+                case Msg.ITEM_TAKEN:
+                    msg = new ItemTakenMsg(NetClient.this.tankClient);
+                    msg.parse(inputStream);
+                    break;
+                case Msg.ITEM_TAKE:
+                    if (!isLeader)
+                        break;
+                    else {
 
+                        try {
+                            int id = inputStream.readInt();
+                            long ts = inputStream.readLong();
+
+                            if (ts < timeStampMin) {
+                                timeStampMin = ts;
+                                ItemTakenMsg itmsg = new ItemTakenMsg(id);
+                                synchronized (clients) {
+                                    // send to everyone
+                                    for (Client c : clients) {
+                                        itmsg.send(datagramSocket, c.getIp(), c.getUdpPort());
+
+                                        System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
+                                    }
+                                }
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+            }
         }
     }
 }

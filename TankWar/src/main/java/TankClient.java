@@ -22,9 +22,18 @@ public class TankClient extends Frame {
     public List<Explode> explodes = new ArrayList<>();
     public List<Tank> tanks = new ArrayList<>();
     public NetClient netClient = new NetClient(this);
+    private boolean spItem = true;
+    private boolean hasItem = false;
     ConnDialog dialog = new ConnDialog();
     private Image image = null;
-
+    public void setHasItem(boolean b)
+    {
+        hasItem = b;
+    }
+    public void setSpItem(boolean b)
+    {
+        spItem = b;
+    }
     public static void main(String[] args) {
         TankClient tankClient = new TankClient();
         tankClient.launch();
@@ -36,7 +45,15 @@ public class TankClient extends Frame {
         if (netClient.isLeader()) {
             g.drawString("Leader", 10, GAME_HEIGHT - 40);
         }
-
+        if(hasItem)
+        {
+            g.drawString("Special Item!", 10, GAME_HEIGHT - 60);
+        }
+        if(spItem)
+        {
+            g.drawRect(GAME_WIDTH/2-10,GAME_HEIGHT/2-10,20,20);
+            g.fillRect(GAME_WIDTH/2-10,GAME_HEIGHT/2-10,20,20);
+        }
         for (Missile m : missiles) {
             if (m.hit(tank)) {
                 netClient.send(new TankDeadMsg(tank.getId()));

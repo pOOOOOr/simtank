@@ -1,6 +1,7 @@
 package main.java.model;
 
 import main.java.TankClient;
+import main.java.comm.ItemTakeMsg;
 import main.java.comm.MissileNewMsg;
 import main.java.comm.TankMoveMsg;
 
@@ -16,6 +17,7 @@ public class Tank {
     private static int XSPEED = 5;
     private static Random r = new Random();
     private static Color[] colors = {Color.RED, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.ORANGE};
+    private static Rectangle spItem= new Rectangle(TankClient.GAME_WIDTH/2-10,TankClient.GAME_HEIGHT/2-10,20,20);
     private int id;
     private int posX;
     private int posY;
@@ -163,6 +165,13 @@ public class Tank {
         if (posY < 30) posY = 30;
         if (posX + WIDTH > TankClient.GAME_WIDTH) posX = TankClient.GAME_WIDTH - WIDTH;
         if (posY + HEIGHT > TankClient.GAME_HEIGHT) posY = TankClient.GAME_HEIGHT - HEIGHT;
+        if(this.getRect().intersects(spItem))
+        {
+            System.out.println("hit");
+            ItemTakeMsg im = new ItemTakeMsg(tankClient);
+            tankClient.netClient.send(im);
+            System.out.println(tankClient.netClient.isLeader());
+        }
     }
 
     public void keyPressed(KeyEvent e) {
