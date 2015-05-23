@@ -1,6 +1,6 @@
 package main.java;
 
-import main.java.comm.ItemTakeMsg;
+import main.java.comm.ItemTakenMsg;
 import main.java.comm.MissileDeadMsg;
 import main.java.comm.TankDeadMsg;
 import main.java.model.Direction;
@@ -40,6 +40,7 @@ public class TankClient extends Frame {
 
         for (Missile m : missiles) {
             if (m.hit(tank)) {
+                m.setLive(false);
                 netClient.send(new TankDeadMsg(tank.getId()));
                 netClient.send(new MissileDeadMsg(m.getTankID(), m.getId(), tank));
             }
@@ -57,16 +58,14 @@ public class TankClient extends Frame {
 
         if (spItem != null && tank.getRect().intersects(spItem)) {
             System.out.println("Get special!");
-            netClient.send(new ItemTakeMsg(this));
+            netClient.send(new ItemTakenMsg(this));
             spItem = null;
         }
 
-
-
         if (spItem != null) {
-            g.drawRect(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);
+            g.drawRect((int) spItem.getX(), (int) spItem.getY(), (int) spItem.getWidth(), (int) spItem.getHeight());
             g.setColor(Color.WHITE);
-            g.fillRect(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);
+            g.fillRect((int) spItem.getX(), (int) spItem.getY(), (int) spItem.getWidth(), (int) spItem.getHeight());
         }
     }
 

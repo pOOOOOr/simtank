@@ -35,6 +35,7 @@ public class MissileDeadMsg implements Msg {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
+            outputStream.writeBoolean(FORWARD);
             outputStream.writeInt(MISSILE_DEAD);
             outputStream.writeInt(tankId);
             outputStream.writeInt(id);

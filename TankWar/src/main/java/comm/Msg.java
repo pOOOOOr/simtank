@@ -13,6 +13,9 @@ public interface Msg {
     int ITEM_TAKE = 6;
     int ITEM_TAKEN = 7;
 
+    boolean FORWARD = true;
+    boolean REPROCESS = false;
+
     void send(DatagramSocket datagramSocket, String IP, int udpPort);
 
     void parse(DataInputStream inputStream);

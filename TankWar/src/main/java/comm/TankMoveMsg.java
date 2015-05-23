@@ -37,6 +37,7 @@ public class TankMoveMsg implements Msg {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
+            outputStream.writeBoolean(FORWARD);
             outputStream.writeInt(TANK_MOVE);
             outputStream.writeInt(id);
             outputStream.writeInt(x);

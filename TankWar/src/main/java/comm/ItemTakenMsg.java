@@ -10,44 +10,33 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 
-/**
- * Created by jieshu on 15/5/23.
- */
+
 public class ItemTakenMsg implements Msg {
     private TankClient tankClient;
-    private int who_id;
     private ByteArrayOutputStream arrayOutputStream;
     private DataOutputStream outputStream;
     private byte[] buf;
-    public ItemTakenMsg(TankClient tankClient, int tankId) {
+
+    public ItemTakenMsg(TankClient tankClient) {
         this.tankClient = tankClient;
-        who_id = tankId;
-        arrayOutputStream = new ByteArrayOutputStream();
-        outputStream = new DataOutputStream(arrayOutputStream);
-
-        try {
-            outputStream.writeInt(ITEM_TAKEN);
-            outputStream.writeInt(who_id);
-            buf = arrayOutputStream.toByteArray();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
     }
 
     @Override
     public void send(DatagramSocket datagramSocket, String IP, int udpPort) {
-
         try {
+            arrayOutputStream = new ByteArrayOutputStream();
+            outputStream = new DataOutputStream(arrayOutputStream);
 
+            outputStream.writeBoolean(REPROCESS);
+            outputStream.writeInt(ITEM_TAKEN);
+            outputStream.writeLong(System.currentTimeMillis());
+            outputStream.writeInt(tankClient.tank.getId());
+
+            buf = arrayOutputStream.toByteArray();
             DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, new InetSocketAddress(IP, udpPort));
             datagramSocket.send(datagramPacket);
-        }
-       catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -59,9 +48,9 @@ public class ItemTakenMsg implements Msg {
             for (Tank t : tankClient.tanks) {
                 if (t.getId() == id) {
                     t.setHasItem(true);
-                }
-                else
+                } else {
                     t.setHasItem(false);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

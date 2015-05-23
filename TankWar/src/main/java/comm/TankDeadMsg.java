@@ -28,6 +28,7 @@ public class TankDeadMsg implements Msg {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
+            outputStream.writeBoolean(FORWARD);
             outputStream.writeInt(TANK_DEAD);
             outputStream.writeInt(id);
             byte[] buf = arrayOutputStream.toByteArray();

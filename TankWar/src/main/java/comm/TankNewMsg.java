@@ -24,6 +24,7 @@ public class TankNewMsg implements Msg {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
+            outputStream.writeBoolean(FORWARD);
             outputStream.writeInt(TANK_NEW);
             outputStream.writeInt(tankClient.tank.getId());
             outputStream.writeInt(tankClient.tank.getPosX());

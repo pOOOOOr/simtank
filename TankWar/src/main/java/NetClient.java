@@ -26,7 +26,7 @@ public class NetClient {
     private DataInputStream dataInputStream = null;
     private List<Client> clients = new ArrayList<>();
     private Client leader = null;
-    private long timeStampMin = Long.MAX_VALUE;
+    private long minTimeStamp = Long.MAX_VALUE;
 
     public NetClient(TankClient tankClient) {
         this.tankClient = tankClient;
@@ -85,7 +85,7 @@ public class NetClient {
 
         while (leader == null) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -150,86 +150,80 @@ public class NetClient {
     private class UDPRecvThread implements Runnable {
 
         byte[] buf = new byte[1024];
+        DatagramPacket cache = new DatagramPacket(buf, buf.length);
 
         public void run() {
-
             while (datagramSocket != null) {
                 DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length);
                 try {
                     datagramSocket.receive(datagramPacket);
-                    if (isLeader) {
-                        synchronized (clients) {
-                            // send to non-leaders
-                            for (Client c : clients.subList(1, clients.size())) {
-                                datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
-                                datagramSocket.send(datagramPacket);
-                                System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
-                            }
-                        }
+                    cache = datagramPacket;
+
+                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buf, 0, datagramPacket.getLength());
+                    DataInputStream inputStream = new DataInputStream(byteArrayInputStream);
+                    boolean forward = inputStream.readBoolean();
+
+                    if (isLeader && forward) {
+                        forwardMessage(datagramPacket);
                     }
 
-                    parse(datagramPacket);
+                    parse(inputStream);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        private void parse(DatagramPacket packet) {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buf, 0, packet.getLength());
-            DataInputStream inputStream = new DataInputStream(byteArrayInputStream);
-            int msgType = 0;
+        private void forwardMessage(DatagramPacket datagramPacket) throws IOException {
+            synchronized (clients) {
+                // send to non-leaders
+                for (Client c : clients.subList(1, clients.size())) {
+                    datagramPacket.setSocketAddress(new InetSocketAddress(c.getIp(), c.getUdpPort()));
+                    datagramSocket.send(datagramPacket);
+                    System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
+                }
+            }
+        }
+
+        private void parse(DataInputStream inputStream) {
             try {
-                msgType = inputStream.readInt();
+                int msgType = inputStream.readInt();
+                Msg msg;
+                switch (msgType) {
+                    case Msg.TANK_NEW:
+                        msg = new TankNewMsg(NetClient.this.tankClient);
+                        msg.parse(inputStream);
+                        break;
+                    case Msg.TANK_MOVE:
+                        msg = new TankMoveMsg(NetClient.this.tankClient);
+                        msg.parse(inputStream);
+                        break;
+                    case Msg.MISSILE_NEW:
+                        msg = new MissileNewMsg(NetClient.this.tankClient);
+                        msg.parse(inputStream);
+                        break;
+                    case Msg.TANK_DEAD:
+                        msg = new TankDeadMsg(NetClient.this.tankClient);
+                        msg.parse(inputStream);
+                        break;
+                    case Msg.MISSILE_DEAD:
+                        msg = new MissileDeadMsg(NetClient.this.tankClient);
+                        msg.parse(inputStream);
+                        break;
+                    case Msg.ITEM_TAKEN:
+                        msg = new ItemTakenMsg(NetClient.this.tankClient);
+                        long timestamp = inputStream.readLong();
+                        if (timestamp < minTimeStamp) {
+                            if (isLeader) {
+                                forwardMessage(cache);
+                            }
+                            minTimeStamp = timestamp;
+                            msg.parse(inputStream);
+                        }
+                        break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            Msg msg;
-            switch (msgType) {
-                case Msg.TANK_NEW:
-                    msg = new TankNewMsg(NetClient.this.tankClient);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.TANK_MOVE:
-                    msg = new TankMoveMsg(NetClient.this.tankClient);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.MISSILE_NEW:
-                    msg = new MissileNewMsg(NetClient.this.tankClient);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.TANK_DEAD:
-                    msg = new TankDeadMsg(NetClient.this.tankClient);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.MISSILE_DEAD:
-                    msg = new MissileDeadMsg(NetClient.this.tankClient);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.ITEM_TAKEN:
-                    msg = new ItemTakenMsg(NetClient.this.tankClient, -1);
-                    msg.parse(inputStream);
-                    break;
-                case Msg.ITEM_TAKE:
-                    if (isLeader) {
-                        try {
-                            if (inputStream.readLong() < timeStampMin) {
-                                msg = new ItemTakenMsg(NetClient.this.tankClient, inputStream.readInt());
-                                synchronized (clients) {
-                                    // send to non-leaders
-                                    for (Client c : clients) {
-                                        msg.send(datagramSocket, c.getIp(), c.getUdpPort());
-                                        System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
-                                    }
-
-                                }
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                    break;
             }
         }
     }

@@ -29,6 +29,7 @@ public class MissileNewMsg implements Msg {
         ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(arrayOutputStream);
         try {
+            outputStream.writeBoolean(FORWARD);
             outputStream.writeInt(MISSILE_NEW);
             outputStream.writeInt(missile.getTankID());
             outputStream.writeInt(missile.getId());

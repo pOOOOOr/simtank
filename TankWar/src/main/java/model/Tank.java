@@ -93,8 +93,8 @@ public class Tank {
         g.setColor(this.color);
         g.fillRect(posX, posY, WIDTH, HEIGHT);
         g.drawString(String.valueOf(id), posX, posY - 2);
-        if (this.isHasItem()) {
-            g.drawString("Special Item!", posX, posY - 14);
+        if (hasItem) {
+            g.drawString("Special!", posX, posY - 14);
         }
         g.setColor(c);
 

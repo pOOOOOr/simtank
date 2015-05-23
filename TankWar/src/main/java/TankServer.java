@@ -5,6 +5,7 @@ import main.java.model.Client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,7 +19,8 @@ public class TankServer {
     private Client currentLeader = null;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("Server started....");
+        String address = InetAddress.getLocalHost().getHostAddress();
+        System.out.println(String.format("Server started, IP: %s", address));
         TankServer tankServer = new TankServer();
         tankServer.start();
     }
