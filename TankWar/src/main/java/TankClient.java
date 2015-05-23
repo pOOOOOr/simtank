@@ -61,9 +61,7 @@ public class TankClient extends Frame {
             spItem = null;
         }
 
-        if (tank.isHasItem()) {
-            g.drawString("Special Item!", 10, GAME_HEIGHT - 60);
-        }
+
 
         if (spItem != null) {
             g.drawRect(GAME_WIDTH / 2 - 10, GAME_HEIGHT / 2 - 10, 20, 20);

@@ -206,9 +206,29 @@ public class NetClient {
                     msg = new MissileDeadMsg(NetClient.this.tankClient);
                     msg.parse(inputStream);
                     break;
-                case Msg.ITEM_TAKE:
-                    msg = new ItemTakeMsg(NetClient.this.tankClient);
+                case Msg.ITEM_TAKEN:
+                    msg = new ItemTakenMsg(NetClient.this.tankClient, -1);
                     msg.parse(inputStream);
+                    break;
+                case Msg.ITEM_TAKE:
+                    if (isLeader) {
+                        try {
+                            if (inputStream.readLong() < timeStampMin) {
+                                msg = new ItemTakenMsg(NetClient.this.tankClient, inputStream.readInt());
+                                synchronized (clients) {
+                                    // send to non-leaders
+                                    for (Client c : clients) {
+                                        msg.send(datagramSocket, c.getIp(), c.getUdpPort());
+                                        System.out.println(String.format("Sending message to %s:%s", c.getIp(), c.getUdpPort()));
+                                    }
+
+                                }
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
                     break;
             }
         }
