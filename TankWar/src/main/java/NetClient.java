@@ -4,10 +4,7 @@ import main.java.comm.*;
 import main.java.model.Client;
 
 import javax.swing.*;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +57,7 @@ public class NetClient {
             e.printStackTrace();
         }
 
-        new Thread(new UDPRecvThread()).start();
+        new Thread(new UDPReceiveThread()).start();
 
         try {
             socket = new Socket(this.serverIP, this.tcpPort);
@@ -72,7 +69,7 @@ public class NetClient {
 
             System.out.println("Connected! ID: " + id);
 
-            new Thread(new IptableThread()).start();
+            new Thread(new BeatThread()).start();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -99,17 +96,18 @@ public class NetClient {
         msg.send(this.datagramSocket, leader.getIp(), leader.getUdpPort());
     }
 
-    private class IptableThread implements Runnable {
+    private class BeatThread implements Runnable {
         public void run() {
             try {
                 while (true) {
                     dataOutputStream.writeInt(1);
-                    String recv = dataInputStream.readLine().trim();
-                    System.out.println(recv);
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(dataInputStream));
+                    String response = reader.readLine().trim();
+                    System.out.println(response);
 
-                    if (recv.contains("Drop")) {
-                        int tankid = Integer.parseInt(recv.split(":")[1]);
-                        tankClient.tanks.stream().filter(t -> t.getId() == tankid).forEach(t -> {
+                    if (response.contains("Drop")) {
+                        int tankID = Integer.parseInt(response.split(":")[1]);
+                        tankClient.tanks.stream().filter(t -> t.getId() == tankID).forEach(t -> {
                             t.setLive(false);
                         });
 
@@ -122,8 +120,8 @@ public class NetClient {
 
                     synchronized (clients) {
                         clients.clear();
-                        String[] iptable = recv.split("\\|");
-                        for (String s : iptable) {
+                        String[] IPArray = response.split("\\|");
+                        for (String s : IPArray) {
                             String[] temp = s.split(":");
                             Client c = new Client(temp[0], Integer.parseInt(temp[1]));
                             clients.add(c);
@@ -147,7 +145,7 @@ public class NetClient {
         }
     }
 
-    private class UDPRecvThread implements Runnable {
+    private class UDPReceiveThread implements Runnable {
 
         byte[] buf = new byte[1024];
         DatagramPacket cache = new DatagramPacket(buf, buf.length);
