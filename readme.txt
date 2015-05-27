@@ -1,10 +1,9 @@
-# Distributed Algorithms Project
+Group 7
+621715	Chuan Qin
+644368	Chikai Zhang
+685269	Xin Huang
 
-- order event: pick up special item
-- leader election: player/leader drops
-
-### Code Structure:
-```
+Code Structure:
 TankWar
 └─src
     └─main
@@ -16,9 +15,8 @@ TankWar
             │   *.java          # Classes for messages, including sending and parsing
             └─model
                 *.java          # Classes for all objects, tanks, clients and so forth
-```
 
-### How to execute:
+How to execute:
 1. create project based on code using Eclipse or IntelliJ IDEA
 2. run TankServer and copy ip address in output
 3. run TankClient and input server's ip address to connect
