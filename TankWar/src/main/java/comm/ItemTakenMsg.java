@@ -30,7 +30,9 @@ public class ItemTakenMsg implements Msg {
 
             outputStream.writeBoolean(REPROCESS);
             outputStream.writeInt(ITEM_TAKEN);
-            outputStream.writeLong(System.currentTimeMillis());
+            long timestamp = System.currentTimeMillis();
+            System.out.println(timestamp);
+            outputStream.writeLong(timestamp);
             outputStream.writeInt(tankClient.tank.getId());
 
             buf = arrayOutputStream.toByteArray();
