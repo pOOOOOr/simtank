@@ -211,6 +211,7 @@ public class NetClient {
                     case Msg.ITEM_TAKEN:
                         msg = new ItemTakenMsg(NetClient.this.tankClient);
                         long timestamp = inputStream.readLong();
+                        System.out.println(timestamp);
                         if (timestamp < minTimeStamp) {
                             if (isLeader) {
                                 forwardMessage(cache);
